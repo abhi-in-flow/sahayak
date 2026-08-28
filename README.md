@@ -34,13 +34,16 @@ The specs are delivered in five batch files. Together they cover documents **D1�
 
 | File | Contents |
 |---|---|
-| `batch-1-D1-changelog-D2-flow.md` | D1 — Change Log & Resolution Summary · D2 — Flow Architecture |
-| `batch-2-D3-screens-S1-S5-SH1.md` | D3 — Screen Specifications, Part 1 (S1–S5, shared component SH1) |
-| `batch-3-D3-screens-S6-S11-appendixA.md` | D3 — Screen Specifications, Part 2 (S6–S11) · Appendix A — T1 form schema |
-| `batch-4-D4-data-D5-errors.md` | D4 — Data & Persistence Contract · D5 — Error, Empty & Timeout Catalog |
-| `batch-5-D6-a11y-D7-analytics.md` | D6 — Accessibility & Internationalization · D7 — Analytics & Observability |
+| `docs/batch-1-D1-changelog-D2-flow.md` | D1 — Change Log & Resolution Summary · D2 — Flow Architecture |
+| `docs/batch-2-D3-screens-S1-S5-SH1.md` | D3 — Screen Specifications, Part 1 (S1–S5, shared component SH1) |
+| `docs/batch-3-D3-screens-S6-S11-appendixA.md` | D3 — Screen Specifications, Part 2 (S6–S11) · Appendix A — T1 form schema |
+| `docs/batch-4-D4-data-D5-errors.md` | D4 — Data & Persistence Contract · D5 — Error, Empty & Timeout Catalog |
+| `docs/batch-5-D6-a11y-D7-analytics.md` | D6 — Accessibility & Internationalization · D7 — Analytics & Observability |
+| `docs/D10-design-direction.md` | D10 — Design Direction (visual & interaction language) |
 
-**Not yet in this repository:** D8 (assistive-tech audit method) and D9 (assumptions register) are referenced by the delivered documents but not included.
+**Not yet in this repository:** D8 (assistive-tech audit method) and D9 (assumptions register) are referenced by the delivered documents but not included. D10 takes its number after the delivered set so those two slots stay reserved.
+
+D10 was authored in this repository rather than delivered with the batch set. It is subordinate to D3, D5 and D6: where it appears to contradict them, they win.
 
 ### Reading order
 
@@ -50,6 +53,7 @@ The specs are delivered in five batch files. Together they cover documents **D1�
 4. **D5** — the single source of truth for every error and empty-state string (`E-nn` / `O-01` codes).
 5. **D6** and **D7** — accessibility and analytics rules that apply across all screens.
 6. **D1** — the change log, when you need to know *why* a rule reads the way it does.
+7. **D10** — the design direction, when you need to know what a screen should look like and why that follows from the rules above.
 
 ### Conventions
 
@@ -66,6 +70,23 @@ The specs are delivered in five batch files. Together they cover documents **D1�
 - `decision.md` — architectural decision record
 - `bugs.md` — defect log
 
+## Running it
+
+```
+npm install
+npm run dev          # http://localhost:3000
+npm run build        # production build
+npm run typecheck    # tsc --noEmit
+```
+
+Node 20 or newer. The stack is Next.js (App Router) with TypeScript and no CSS framework: D10's tokens in `app/tokens.css` are the design system. See DECISION-008 for why, and for the five spec requirements that narrowed the choice.
+
 ## Status
 
-Specification phase. Implementation has not started; no stack has been chosen or committed to.
+Early implementation. The stack is chosen (DECISION-008) and the foundation is in place: design tokens, the string layer, global chrome, S1, the D4 persistence layer (T-LOCAL, T-IDB, T-SRV) and the T-CACHE service worker.
+
+`/api/journey` is a development stub: in-memory, per-process, and not the backend. There is no test suite yet.
+
+**Blocked on the author:** tasks T1 to T9 are referenced 43 times across the specs but never enumerated (BUG-009, P0). Only T1 is identifiable. S1's no-JS fallback, S5's journey map, S6 and the S3e browse journeys cannot be completed without the roster, and the missing entries are deliberately not invented: C4 requires a source and verification date on every seeded item, and D10 §10.2 forbids placeholder government content.
+
+The Hindi strings are structurally complete but are placeholders, not translations (BUG-008). The hi-IN tile must not be enabled for real users until they are reviewed by a native speaker.

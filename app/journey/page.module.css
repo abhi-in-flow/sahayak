@@ -1,0 +1,404 @@
+/* S5 — Journey Map. D3 S5; D10 10.9; D11 §3 (banner family). Tokens only. */
+
+/* ---- loading (skeleton in the shape of the real content) -------------- */
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.skHeader {
+  height: 44px;
+}
+
+.skCard {
+  height: 150px;
+}
+
+/* ---- header: count + progress ring ------------------------------------ */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-4) 0 var(--sp-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.heading {
+  font-size: var(--size-title);
+}
+
+.progressText {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+/* The ring is decorative; the literal "{done} of {n} done" is the
+   accessible carrier (DP-4). Track line-300, fill accent-700. */
+.ringTrack {
+  fill: none;
+  stroke: var(--line-300);
+}
+
+.ringFill {
+  fill: none;
+  stroke: var(--accent-700);
+  stroke-linecap: round;
+}
+
+/* C3 honesty chip: persistent, quiet (D10 10.8). */
+.honesty {
+  align-self: flex-start;
+  background: var(--sunken);
+  color: var(--ink-700);
+  font-size: var(--size-meta);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+}
+
+/* ---- banner family (D11 §3): full-bleed bands, radius 0 ---------------- */
+
+.bannerManual {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--accent-100);
+  color: var(--accent-800);
+  border-top: 2px solid var(--accent-700);
+  border-bottom: 1px solid var(--line-600);
+  border-radius: var(--radius-banner);
+  font-size: var(--size-body);
+}
+
+.bannerChange {
+  flex: none;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  color: var(--accent-800);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.bannerDiff {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  background: var(--surface);
+  border-top: 1px solid var(--line-600);
+  border-bottom: 1px solid var(--line-600);
+  border-radius: var(--radius-banner);
+}
+
+.diffSummary {
+  font-size: var(--size-meta);
+  font-weight: 600;
+  color: var(--ink-700);
+}
+
+.diffToggle {
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--accent-800);
+  font-size: var(--size-meta);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Expander content sits in --sunken (D11 §3). */
+.diffList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  background: var(--sunken);
+  border-radius: var(--radius-control);
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+.diffLine {
+  display: block;
+  overflow-wrap: break-word;
+}
+
+.diffDismiss {
+  align-self: flex-end;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-meta);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- timeline ----------------------------------------------------------- */
+
+/* The rail is 2px line-300, decorative only, aria-hidden (D10 10.9).
+   line-300 never bounds a component: cards carry their own borders. */
+.timeline {
+  position: relative;
+  padding-left: var(--sp-4);
+}
+
+.rail {
+  position: absolute;
+  left: 3px;
+  top: var(--sp-3);
+  bottom: var(--sp-3);
+  width: 2px;
+  background: var(--line-300);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+/* ---- task cards ---------------------------------------------------------- */
+
+.card {
+  position: relative;
+  display: block;
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+/* "Do this first": task card plus 2px accent border and an accent-100
+   header band. Exactly one exists (D3 S5; D10 10.9). */
+.cardFirst {
+  border: 2px solid var(--accent-700);
+  padding: calc(var(--sp-4) - 1px);
+}
+
+.firstBand {
+  display: block;
+  margin: calc(-1 * (var(--sp-4) - 1px)) calc(-1 * (var(--sp-4) - 1px)) var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--accent-100);
+  color: var(--accent-800);
+  font-size: var(--size-meta);
+  font-weight: 600;
+  border-radius: calc(var(--radius-card) - 2px) calc(var(--radius-card) - 2px) 0 0;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+/* Stretched-link pattern: the card routes to S6, the provenance link
+   stays above it (z-index) and independently tappable. */
+.cardLink {
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
+.cardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+}
+
+.cardLink:focus-visible {
+  outline: none;
+}
+
+.cardLink:focus-visible::after {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: calc(-1 * var(--focus-offset));
+}
+
+.taskName {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+}
+
+.department {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+.preNote {
+  background: var(--done-100);
+  color: var(--done-700);
+  font-size: var(--size-meta);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+}
+
+.offlineChip {
+  background: var(--warn-100);
+  color: var(--warn-800);
+  font-size: var(--size-meta);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+}
+
+.lockNote {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+/* C4 provenance: discrete meta lines, never a separator run (D11 §1). */
+.provenance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--sp-1);
+}
+
+.metaLine {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.metaLink {
+  position: relative;
+  z-index: 1;
+  color: var(--accent-800);
+  text-decoration: underline;
+  overflow-wrap: break-word;
+}
+
+/* ---- completion state ----------------------------------------------------- */
+
+.complete {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.completeTitle {
+  font-size: var(--size-title);
+}
+
+.completeBody {
+  color: var(--ink-700);
+}
+
+/* ---- archived section ------------------------------------------------------ */
+
+.archived {
+  background: var(--sunken);
+  border-radius: var(--radius-card);
+}
+
+.archivedSummary {
+  min-height: var(--target-min);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--sp-4);
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--ink-700);
+}
+
+.archivedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-4) var(--sp-4);
+}
+
+.archivedCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+}
+
+.archivedName {
+  font-weight: 600;
+  color: var(--ink-700);
+}
+
+.archivedNote {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+/* ---- actions ----------------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.primary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.changeAnswers {
+  align-self: center;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  text-decoration: underline;
+}

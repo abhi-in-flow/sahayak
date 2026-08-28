@@ -1,0 +1,230 @@
+/* S4 — Confirm Understanding. D3 S4. 360px baseline, tokens only. */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-4) 0 var(--sp-4);
+}
+
+/* ---- loading (skeleton in the shape of the real content, D10 10.9) --- */
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.skTitle {
+  width: 45%;
+  height: 24px;
+}
+
+.skSummary {
+  height: 84px;
+}
+
+.skSummaryShort {
+  width: 70%;
+  height: 24px;
+}
+
+.skChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.skChip {
+  width: 140px;
+  height: 48px;
+}
+
+.skCta {
+  height: 56px;
+}
+
+/* ---- back and heading ------------------------------------------------- */
+
+.back {
+  align-self: flex-start;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  text-decoration: underline;
+}
+
+.heading {
+  font-size: var(--size-title);
+}
+
+/* ---- summary card (D11 §2: one of the two real-elevation surfaces) ---- */
+
+.summaryCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.summaryHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-2);
+}
+
+.summaryText {
+  font-size: var(--size-body-lg);
+}
+
+/* Speaker control: icon plus its own accessible label (D10 10.10). */
+.speak {
+  flex: none;
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: calc(var(--sp-2) * -1);
+  background: none;
+  border: none;
+  border-radius: var(--radius-control);
+  color: var(--ink-700);
+  cursor: pointer;
+}
+
+.speak:hover {
+  color: var(--accent-700);
+}
+
+/* ---- editable chips (D10 10.9: accent tint + pencil; unsure dashed) --- */
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: var(--target-min);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--accent-100);
+  color: var(--accent-800);
+  border: 1px solid var(--accent-800);
+  border-radius: var(--radius-control);
+  font-size: var(--size-body);
+  text-decoration: none;
+}
+
+.chipLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-weight: 500;
+}
+
+.pencil {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+
+/* Unknown answers render lighter: dashed border, ink-500 (D3 S4). */
+.chipUnsure {
+  background: var(--surface);
+  color: var(--ink-500);
+  border: 1px dashed var(--ink-500);
+}
+
+.chipUnsure .chipLabel {
+  font-weight: 400;
+}
+
+.chipCaption {
+  font-size: var(--size-meta);
+  line-height: var(--lh-tight);
+  color: var(--ink-500);
+}
+
+/* ---- consequence preview and Updated delta (D3 S4; D11 §4) ------------ */
+
+.consequence {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+}
+
+.updatedRow {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.pill {
+  background: var(--accent-100);
+  color: var(--accent-800);
+  border-radius: var(--radius-control);
+  padding: 4px 10px;
+  font-size: var(--size-meta);
+  font-weight: 600;
+}
+
+.delta {
+  color: var(--ink-700);
+}
+
+/* ---- CTAs (D10 10.9) --------------------------------------------------- */
+
+.ctaRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.primary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.secondary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

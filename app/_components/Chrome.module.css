@@ -1,0 +1,51 @@
+/* Global chrome. Present on every screen without exception.
+   D3 conventions for all of D3; C1; D6 6.1. */
+
+/* The disclosure banner is non-dismissible, radius 0 so it reads as system
+   furniture rather than content, and never below 14px. D10 10.8. */
+.disclosure {
+  background: var(--sunken);
+  color: var(--ink-700);
+  border-bottom: 1px solid var(--line-600);
+  border-radius: var(--radius-banner);
+  font-size: var(--size-meta);
+  padding: var(--sp-2) var(--sp-4);
+  text-align: center;
+}
+
+/* D6 6.1: the footer link to S11 is LAST in the tab order on every screen. */
+.footer {
+  padding: var(--sp-5) var(--sp-4) var(--sp-6);
+  text-align: center;
+}
+
+.footerLink {
+  color: var(--ink-500);
+  font-size: var(--size-meta);
+  text-decoration: underline;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+}
+
+.footerLink:hover {
+  color: var(--accent-800);
+}
+
+.skip {
+  position: absolute;
+  left: var(--sp-4);
+  top: var(--sp-2);
+  z-index: 10;
+  background: var(--surface);
+  color: var(--accent-800);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  padding: var(--sp-2) var(--sp-3);
+  transform: translateY(-200%);
+}
+
+.skip:focus {
+  transform: translateY(0);
+}

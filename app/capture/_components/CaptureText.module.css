@@ -1,0 +1,53 @@
+/* S2b client island. D3 S2b. 360px baseline. All values from tokens. */
+
+.headline {
+  font-size: var(--size-display);
+  max-width: 18ch;
+}
+
+/* Multiline field: min 3 rows (rows attr), body-lg text for the 18px
+   floor (D3 S2b, D6 6.3), grows with content, never a fixed height (A2). */
+.textarea {
+  width: 100%;
+  padding: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--size-body-lg);
+  line-height: var(--lh-body);
+  resize: vertical;
+}
+
+/* Primary CTA binding (D10 10.9): accent-700 fill, white label,
+   body-lg, 56px min, radius 8. */
+.primary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  background: var(--accent-700);
+  border: none;
+  border-radius: var(--radius-control);
+  color: var(--surface);
+  font: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Tertiary link: accent-800, underlined (D10 10.9). */
+.tertiary {
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-3);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  text-decoration: underline;
+}

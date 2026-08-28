@@ -1,0 +1,8 @@
+/* S2 — Problem Capture (Voice). D3 S2. 360px baseline. */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) 0 var(--sp-4);
+}

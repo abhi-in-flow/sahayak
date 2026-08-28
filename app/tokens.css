@@ -1,0 +1,106 @@
+/* =========================================================================
+   Sahayak design tokens.
+   Source of truth: docs/D10-design-direction.md sections 10.3, 10.5, 10.6.
+   Every colour value here was contrast-computed, not chosen by eye; the
+   ratios are recorded in D10 10.3 and reproduced in comments below.
+
+   Do not add a raw hex value to a component. DECISION-007 keeps dark mode
+   cheap to add later only for as long as every colour goes through a token.
+   ========================================================================= */
+
+:root {
+  /* ---- surfaces ---------------------------------------------------- */
+  --page: #f2f6f5;
+  --surface: #ffffff;
+  --sunken: #e6edec;
+
+  /* ---- text -------------------------------------------------------- */
+  --ink-900: #0e1b1c; /* 17.61:1 on surface, 16.17:1 on page */
+  --ink-700: #39504f; /*  8.63:1 on surface,  7.27:1 on sunken */
+  --ink-500: #4f6564; /*  6.22:1 on surface,  5.24:1 on sunken */
+
+  /* ---- lines ------------------------------------------------------- */
+  /* line-600 delineates interactive components and must clear 3:1 (A4).
+     Verified: 4.00 vs surface, 3.68 vs page, 3.37 vs sunken. */
+  --line-600: #6f8382;
+  /* line-300 is DECORATIVE ONLY and is exempt from the 3:1 floor because
+     it never bounds a component. Using it on a field, button or chip
+     border is a defect. See D10 10.3. */
+  --line-300: #d3dedd;
+
+  /* ---- accent ------------------------------------------------------ */
+  --accent-800: #06403f; /* 11.58:1 on white */
+  --accent-700: #0a5654; /*  8.50:1 on white */
+  --accent-100: #ddecea; /* accent-800 on this: 9.52:1 */
+
+  /* ---- semantic ---------------------------------------------------- */
+  --done-700: #1d6234; /* 7.37:1 on white; on done-100: 6.13:1 */
+  --done-100: #dfeee2;
+  --warn-800: #7a4e06; /* 7.19:1 on white; on warn-100: 6.27:1 */
+  --warn-100: #faeeda;
+  --err-700: #9e2222; /* 7.76:1 on white; on err-100: 6.32:1 */
+  --err-100: #f9e3e1;
+
+  /* ---- elevation (D11 2: shadows tinted to the page hue, never pure
+          black; used sparingly, only where elevation is real) --------- */
+  --shadow-card: 0 1px 2px rgb(14 27 28 / 0.05), 0 4px 12px rgb(14 27 28 / 0.06);
+  --shadow-sheet: 0 8px 32px rgb(14 27 28 / 0.18);
+
+  /* ---- focus ------------------------------------------------------- */
+  /* The ring ALONE fails 3:1 against every dark fill (2.07 to 2.45).
+     The offset gap is what satisfies A8 on filled CTAs. It is not
+     optional styling. See D10 10.3. */
+  --focus-ring: var(--ink-900);
+  --focus-ring-width: 3px;
+  --focus-offset: 2px;
+
+  /* ---- radius (one scale, D10 10.6) -------------------------------- */
+  --radius-control: 8px; /* fields, chips, buttons */
+  --radius-card: 12px; /* cards, sheets */
+  --radius-banner: 0; /* full-bleed system furniture */
+
+  /* ---- space (4px base, D10 10.6) ---------------------------------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* ---- targets (A3; floors, not defaults) -------------------------- */
+  --target-min: 48px;
+  --cta-min-height: 56px;
+  --answer-min-height: 56px;
+  --tile-min: 96px;
+  --mic-size: 88px;
+
+  /* ---- type -------------------------------------------------------- */
+  --font-ui: "Anek Latin", "Anek Devanagari", "Noto Sans",
+    "Noto Sans Devanagari", system-ui, sans-serif;
+  --font-nastaliq: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --size-display: 28px;
+  --size-question: 24px;
+  --size-title: 20px;
+  --size-body-lg: 18px; /* primary action floor, D6 6.3 */
+  --size-body: 16px; /* body floor, D6 6.3 */
+  --size-label: 16px; /* never smaller than body */
+  --size-meta: 14px; /* smallest type in the product */
+
+  /* Line height is a PER-SCRIPT token, never a global constant.
+     Nastaliq needs ~150% of Latin/Devanagari vertical space and will
+     collide at these values. See D10 10.5 and DECISION-006. */
+  --lh-body: 1.55;
+  --lh-heading: 1.3;
+  --lh-tight: 1.35;
+}
+
+/* Urdu and any future Nastaliq locale. Applied by the root layout from
+   the locale's script class, not by a media query. */
+:root[data-script="nastaliq"] {
+  --font-ui: var(--font-nastaliq);
+  --lh-body: 2.2;
+  --lh-heading: 1.9;
+}

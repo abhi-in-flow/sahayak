@@ -1,0 +1,46 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.message {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+.retry {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* Tactile push (taste ruling, D11 3): a state change on press, not an
+   entrance animation. Collapses under reduced motion via globals.css. */
+.retry:active {
+  transform: translateY(1px);
+}
+
+.tertiary {
+  background: none;
+  border: none;
+  padding: var(--sp-2) 0;
+  min-height: var(--target-min);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  font-family: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

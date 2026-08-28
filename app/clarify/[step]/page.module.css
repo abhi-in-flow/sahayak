@@ -1,0 +1,7 @@
+/* S3 route shell (D3 S3). The island owns the card layout. */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-4) 0 var(--sp-5);
+}

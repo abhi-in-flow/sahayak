@@ -1,0 +1,237 @@
+/* S1 — Entry & Language Selection. D3 S1. 360px baseline. */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) 0 var(--sp-4);
+}
+
+/* Text only. No emblem, tricolour, Ashoka motif or .gov.in visual
+   language (D3 S1; D10 DP-2). */
+.wordmark {
+  font-size: var(--size-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--accent-800);
+  margin: 0;
+}
+
+.headline {
+  font-size: var(--size-display);
+  max-width: 18ch;
+}
+
+/* ---- entry island ---------------------------------------------------- */
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+/* Entry (c) only: the sanctioned return path, top of the content
+   (D3 S1 re-entry affordance, explicit N1 exemption). */
+.backToQuestion {
+  align-self: flex-start;
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  text-decoration: underline;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ---- language tiles ------------------------------------------------- */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-4); /* 16px, per D3 S1 */
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tile {
+  /* min, never a fixed height: the tile must grow with text scaling (A2) */
+  min-height: var(--tile-min);
+  min-width: var(--tile-min);
+  display: flex;
+  align-items: stretch;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+  cursor: pointer;
+}
+
+/* Pre-highlight from Accept-Language. A hint only: it never selects and
+   never auto-advances (D3 S1 edge case). */
+.tilePreferred {
+  border-width: 2px;
+  border-color: var(--accent-700);
+  background: var(--accent-100);
+}
+
+.tileMain {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  color: var(--ink-900);
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tileEndonym {
+  font-size: var(--size-body-lg);
+}
+
+/* Speaker icon, its own control with its own 48px target (A3),
+   sitting beside the tile's main link. */
+.speaker {
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-radius: var(--radius-control);
+  color: var(--ink-700);
+  cursor: pointer;
+}
+
+.speaker:hover {
+  color: var(--accent-700);
+}
+
+/* ---- primary action ------------------------------------------------- */
+
+/* Mic: 88px diameter and NEVER icon-only (D3 S1). The label is part of
+   the control, not a tooltip. */
+.micButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  background: none;
+  border: none;
+  padding: var(--sp-2);
+  cursor: pointer;
+  color: var(--ink-900);
+  font: inherit;
+}
+
+.micCircle {
+  width: var(--mic-size);
+  height: var(--mic-size);
+  border-radius: 50%;
+  background: var(--accent-700);
+  color: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.micLabel {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+}
+
+.micRow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+}
+
+/* Lower visual weight than the mic, but a full target and a real
+   underline: the underline is the non-colour channel (D10 DP-4). */
+.typeInstead {
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  text-decoration: underline;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-3);
+}
+
+/* ---- continue card (conditional, above the tiles) ------------------- */
+
+.continueCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 2px solid var(--accent-700);
+  border-radius: var(--radius-card);
+  text-decoration: none;
+  color: var(--ink-900);
+  min-height: var(--cta-min-height);
+}
+
+.continueTitle {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+}
+
+.continueDescriptor {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+/* ---- trust strip ---------------------------------------------------- */
+
+.trustStrip {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  text-align: center;
+  padding-top: var(--sp-2);
+}
+
+/* ---- no-JS fallback ------------------------------------------------- */
+
+.noJs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.noJsList {
+  margin: 0;
+  padding-left: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.noJsMeta {
+  display: block;
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  line-height: var(--lh-tight);
+}
+
+.noJsMeta:first-of-type {
+  margin-top: var(--sp-1);
+}
+
+.gap {
+  background: var(--warn-100);
+  border-top: 2px solid var(--warn-800);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}

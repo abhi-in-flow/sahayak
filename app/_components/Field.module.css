@@ -1,0 +1,27 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.label {
+  font-size: var(--size-label);
+  font-weight: 500;
+}
+
+.helper {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.counter {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.error {
+  font-size: var(--size-meta);
+  color: var(--err-700);
+}

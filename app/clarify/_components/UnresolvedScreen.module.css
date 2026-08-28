@@ -1,0 +1,155 @@
+/* S3e - Not Understood / Human Fallback. D3 S3e; card treatment D11 4. */
+
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+/* ---- back -------------------------------------------------------------- */
+
+.topRow {
+  display: flex;
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2) 0 0;
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  cursor: pointer;
+}
+
+/* ---- what we heard ------------------------------------------------------ */
+
+.headline {
+  font-size: var(--size-display);
+  max-width: 20ch;
+}
+
+.heard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.heardLabel {
+  font-size: var(--size-label);
+  font-weight: 500;
+  color: var(--ink-700);
+}
+
+.transcript {
+  /* The quiet card: verbatim user words on --sunken (D10 10.3). */
+  padding: var(--sp-4);
+  background: var(--sunken);
+  border-radius: var(--radius-card);
+  color: var(--ink-700);
+  font-size: var(--size-body-lg);
+  overflow-wrap: break-word;
+}
+
+/* ---- the three exits, fixed order (D3 S3e) ------------------------------ */
+
+.exits {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  background: var(--accent-700);
+  border: none;
+  border-radius: var(--radius-control);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* D10 10.9 secondary CTA: surface fill, accent-800 label, 1px line-600. */
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  cursor: pointer;
+}
+
+/* ---- browse list (expanded inline; D11 4 card treatment) ---------------- */
+
+.browse {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: calc(var(--sp-3) * -1); /* sit with the exits, not a new section */
+}
+
+.journeyCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  width: 100%;
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.journeyTitle {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.journeyMeta {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.journeyCta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: var(--target-min);
+  margin-top: var(--sp-1);
+  font-size: var(--size-body);
+  color: var(--accent-800);
+  text-decoration: underline; /* the non-colour channel (D10 DP-4) */
+}
+
+/* ---- loading skeleton ---------------------------------------------------- */
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4) 0;
+}
+
+.skeletonRow {
+  min-height: var(--target-min);
+}

@@ -1,0 +1,134 @@
+@import "./tokens.css";
+
+/* =========================================================================
+   Base. Everything here is a consequence of D6 6.3 (200% scaling, +40%
+   string expansion) or D10 10.1 DP-1 (legibility outranks identity).
+   ========================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Never set a px font-size on html: it breaks the user's browser text
+     size and A2's 200% scaling requirement. */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink-900);
+  font-family: var(--font-ui);
+  font-size: var(--size-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* No fixed heights on anything containing text, and no ellipsis on
+   status words, task names or answer options. D6 6.3. */
+h1,
+h2,
+h3,
+p,
+li,
+button,
+label {
+  overflow-wrap: break-word;
+}
+
+h1,
+h2,
+h3 {
+  line-height: var(--lh-heading);
+  margin: 0;
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--size-display);
+}
+h2 {
+  font-size: var(--size-title);
+}
+
+p {
+  margin: 0;
+}
+
+/* Visible focus everywhere (A8). The offset gap is load-bearing on filled
+   controls, where the ring alone fails the 3:1 floor. See tokens.css. */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--radius-control);
+}
+
+/* Motion budget is near-zero by design (D10 10.7). Anything that does
+   animate must collapse here. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Screen-reader-only text. Labels are authored in the selected language,
+   never English (A7). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Tactile press feedback (D11 1): a 1px push on :active. A state change
+   on interaction, not an entrance animation; the global reduced-motion
+   collapse does not need to catch it because a transform applied only
+   while pressed is not vestibular motion. */
+.pressable:active {
+  transform: translateY(1px);
+}
+
+.pressable {
+  transition: transform 0.05s ease;
+}
+
+/* Skeleton loading blocks (D10 10.9): shape of the real content, never
+   a spinner. Pair with aria-busy="true" on the loading container. */
+.skeleton {
+  background: var(--sunken);
+  border-radius: var(--radius-control);
+  min-height: 1em;
+  animation: skeleton-shimmer 1200ms ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Page shell at the 360px baseline. */
+.shell {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 var(--sp-4);
+}

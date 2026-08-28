@@ -1,0 +1,68 @@
+/* Example chips, D11 4: surface, 1px line-600, radius 8, full 48px
+   target, quote text in ink-700. The overwrite-confirm ask replaces the
+   chip row inline, never a modal. */
+
+.row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2); /* 8px between adjacent targets (A3) */
+}
+
+.chip {
+  min-height: var(--target-min);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-700);
+  font: inherit;
+  font-size: var(--size-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+/* ---- overwrite-confirm ask ------------------------------------------ */
+
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+}
+
+.askText {
+  font-size: var(--size-body);
+  font-weight: 500;
+  color: var(--ink-900);
+}
+
+.askActions {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+.askButton,
+.askKeep {
+  min-height: var(--target-min);
+  padding: 0 var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  font: inherit;
+  font-size: var(--size-body);
+  cursor: pointer;
+}
+
+/* Replace takes the secondary-CTA binding (accent-800 label);
+   Keep is the quieter of the two (ink-700), per D10 10.9. */
+.askButton {
+  color: var(--accent-800);
+  font-weight: 500;
+}
+
+.askKeep {
+  color: var(--ink-700);
+}

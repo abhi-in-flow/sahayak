@@ -1,0 +1,22 @@
+/* O-01. Global chip, per D5 and every screen's Disabled row in D3. */
+.chip {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--warn-100);
+  color: var(--warn-800);
+  border-bottom: 1px solid var(--warn-800);
+  font-size: var(--size-meta);
+  line-height: var(--lh-tight);
+}
+
+.icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}

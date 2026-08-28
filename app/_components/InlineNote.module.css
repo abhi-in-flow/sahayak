@@ -1,0 +1,22 @@
+.note {
+  font-size: var(--size-meta);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-control);
+  color: var(--ink-700);
+}
+
+.info {
+  background: var(--sunken);
+}
+
+.warn {
+  background: var(--warn-100);
+  color: var(--warn-800);
+  border-left: 2px solid var(--warn-800);
+}
+
+.error {
+  background: var(--err-100);
+  color: var(--err-700);
+  border-left: 2px solid var(--err-700);
+}

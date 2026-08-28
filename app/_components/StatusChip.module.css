@@ -1,0 +1,96 @@
+/* =========================================================================
+   Status chip. D10 10.4.
+
+   Two failures are designed out here rather than left to review:
+
+   BUG-002  The chip is a WRAPPING BLOCK, never a fixed-height pill. The
+            Hindi "Locked - needs {document}" label reaches ~356px against a
+            274px budget at the 360px baseline, and D6 6.3 forbids
+            truncating the status word, so ellipsis is not available. Hence
+            no height, no white-space:nowrap on the block, no text-overflow.
+
+   BUG-006  A chip whose tint equals its container ground is invisible
+            except for its border. On a --sunken container the tint swaps
+            to --surface. See .onSunken below.
+   ========================================================================= */
+
+.chip {
+  display: inline-flex;
+  align-items: flex-start; /* icon aligns to first line, not to the block */
+  gap: var(--sp-2);
+  min-height: 28px; /* a floor, never a height */
+  padding: 5px 10px;
+  border-radius: var(--radius-control);
+  border: 1px solid;
+  font-size: var(--size-meta);
+  line-height: var(--lh-tight);
+  max-width: 100%;
+}
+
+.icon {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+
+/* The status word never wraps and never truncates (D6 6.3). The
+   interpolated document name, in the sibling span, wraps freely. */
+.word {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.detail {
+  font-weight: 400;
+}
+
+/* ---- variants. Colour is the third channel, after text and shape ---- */
+
+.doNow {
+  background: var(--accent-100);
+  color: var(--accent-800);
+  border-color: var(--accent-800);
+}
+
+.locked {
+  background: var(--sunken);
+  color: var(--ink-700);
+  border-color: var(--ink-700);
+}
+
+.inProgress {
+  background: var(--surface);
+  color: var(--ink-700);
+  border-color: var(--ink-700);
+}
+
+.done {
+  background: var(--done-100);
+  color: var(--done-700);
+  border-color: var(--done-700);
+}
+
+/* Dashed border is the shape channel A6 demands for the uncertain states.
+   It survives greyscale and the printed S10 checklist. */
+.mayNotApply {
+  background: var(--surface);
+  color: var(--ink-500);
+  border-color: var(--ink-500);
+  border-style: dashed;
+}
+
+.archived {
+  background: var(--sunken);
+  color: var(--ink-500);
+  border-color: var(--ink-500);
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+/* BUG-006: on a sunken container, sunken-tinted chips lose their tint
+   channel. Swap the ground, keep text, border and icon unchanged. */
+.onSunken.locked,
+.onSunken.archived {
+  background: var(--surface);
+}
