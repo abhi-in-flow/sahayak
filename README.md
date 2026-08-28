@@ -36,12 +36,33 @@ The product is specified by documents **D1–D7** plus Appendix A, maintained pr
 
 D10 was authored in this repository rather than delivered with the batch set, and takes its number after the delivered documents so that D8 (assistive-tech audit method) and D9 (assumptions register) — referenced by the specs but not written — keep their slots. It is subordinate to D3, D5 and D6: where it appears to contradict them, they win.
 
-### Conventions
+### Where to start
 
-- Screens are `S1`–`S11`; `S2b` is the typed-input variant, `S3e` the low-confidence escape, `SH1` a shared modal sheet.
-- Tasks/journeys are `T1`–`T9`. Storage records are namespaced `sbn.*`.
-- Copy strings are canonical English in the specs; every string ships in every enabled language before that language is switched on.
-- Layouts are specified at a 360 px baseline.
+The specifications are not published here, so the reading order is the code:
+
+1. **`DESIGN.md`** — the design direction, and the only specification document in the repository. Everything visual derives from it.
+2. **`app/tokens.css`** — the design system in practice; every value traces to `DESIGN.md` §10.3, §10.5 and §10.6.
+3. **`app/_lib/`** — the persistence layer (`storage/`), the string layer (`i18n/`) and the seeded domain data.
+4. **`app/`** routes — the screens, each implementing the `S`-code named in its comments.
+
+For anyone with access to the private specification set, those documents read D2 → D3 → D4 → D5 → D6 and D7 → D1, with D10 (`DESIGN.md`) last.
+
+### Codes
+
+Source comments throughout the repository reference the specification set by code. The families are:
+
+| Code | Meaning |
+|---|---|
+| `D1`–`D7`, `D10` | Specification documents. `D10` is `DESIGN.md`, the only one published here. `D8` and `D9` are cited by the others but were never written. |
+| `S1`–`S11` | Screens. `S2b` is the typed-input variant of `S2`, `S3e` the low-confidence escape from `S3`, and `SH1` a shared modal sheet rather than a screen. |
+| `T1`–`T9` | Tasks within a journey. Only `T1` is currently identifiable (BUG-009). |
+| `C1`–`C7` | Hard product constraints. `C1` is the non-dismissible "not a government website" disclosure carried on every screen; `C4` requires every seeded government fact to carry a source and a verification date. |
+| `E-nn`, `O-01` | Error, empty-state and offline strings. D5 is their single source of truth. |
+| `T-LOCAL`, `T-IDB`, `T-SRV`, `T-CACHE` | The four persistence tiers: a single versioned `localStorage` record, the IndexedDB document wallet, the server-side journey store, and the Cache API journey pack. |
+| `sbn.*` | Namespace for every stored record. |
+| `BUG-nnn`, `DECISION-nnn` | Entries in the local-only defect log and decision record — see [Project tracking](#project-tracking). |
+
+Two further conventions: copy strings are canonical English in the specs, and every string ships in every enabled language before that language is switched on; layouts are specified at a 360 px baseline.
 
 ---
 
