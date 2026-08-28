@@ -5,7 +5,7 @@
 
 Sahayak is a voice-first guidance app that helps people in India work out **which government process applies to them** and **what to do next** — in their own language, by speaking rather than by filling in a form.
 
-This repository currently holds the **specification set**. No implementation code has been written yet.
+This repository holds the **implementation**. The specification set it is built from is maintained privately and is not published here; `DESIGN.md` is the one specification document included, because the code depends on it directly.
 
 ---
 
@@ -28,32 +28,13 @@ Core behaviors defined in the specs:
 
 ---
 
-## Specification set
+## Specification & design
 
-The specs are delivered in five batch files. Together they cover documents **D1–D7** plus Appendix A.
+The product is specified by documents **D1–D7** plus Appendix A, maintained privately outside this repository. They are not published here.
 
-| File | Contents |
-|---|---|
-| `docs/batch-1-D1-changelog-D2-flow.md` | D1 — Change Log & Resolution Summary · D2 — Flow Architecture |
-| `docs/batch-2-D3-screens-S1-S5-SH1.md` | D3 — Screen Specifications, Part 1 (S1–S5, shared component SH1) |
-| `docs/batch-3-D3-screens-S6-S11-appendixA.md` | D3 — Screen Specifications, Part 2 (S6–S11) · Appendix A — T1 form schema |
-| `docs/batch-4-D4-data-D5-errors.md` | D4 — Data & Persistence Contract · D5 — Error, Empty & Timeout Catalog |
-| `docs/batch-5-D6-a11y-D7-analytics.md` | D6 — Accessibility & Internationalization · D7 — Analytics & Observability |
-| `docs/D10-design-direction.md` | D10 — Design Direction (visual & interaction language) |
+**`DESIGN.md` — D10, Design Direction** *is* in this repository, because the code cannot be read without it. It is the design system's source of truth: `app/tokens.css` derives every colour, type and spacing value from its sections, and roughly forty source comments cite it directly (`D10 §10.4`, `D10 10.9`).
 
-**Not yet in this repository:** D8 (assistive-tech audit method) and D9 (assumptions register) are referenced by the delivered documents but not included. D10 takes its number after the delivered set so those two slots stay reserved.
-
-D10 was authored in this repository rather than delivered with the batch set. It is subordinate to D3, D5 and D6: where it appears to contradict them, they win.
-
-### Reading order
-
-1. **D2** — flow architecture, for the shape of the whole thing.
-2. **D3** — screen specs, for per-screen entry/exit conditions and states.
-3. **D4** — data and persistence, for what is stored where and what survives what.
-4. **D5** — the single source of truth for every error and empty-state string (`E-nn` / `O-01` codes).
-5. **D6** and **D7** — accessibility and analytics rules that apply across all screens.
-6. **D1** — the change log, when you need to know *why* a rule reads the way it does.
-7. **D10** — the design direction, when you need to know what a screen should look like and why that follows from the rules above.
+D10 was authored in this repository rather than delivered with the batch set, and takes its number after the delivered documents so that D8 (assistive-tech audit method) and D9 (assumptions register) — referenced by the specs but not written — keep their slots. It is subordinate to D3, D5 and D6: where it appears to contradict them, they win.
 
 ### Conventions
 
@@ -66,9 +47,7 @@ D10 was authored in this repository rather than delivered with the batch set. It
 
 ## Project tracking
 
-- `progress.md` — session log
-- `decision.md` — architectural decision record
-- `bugs.md` — defect log
+The session log (`progress.md`), decision record (`decision.md`) and defect log (`bugs.md`) are kept locally and are deliberately not tracked in this repository. Codes referenced from source comments and from this README — `DECISION-008`, `BUG-009` — resolve against those local files.
 
 ## Running it
 
@@ -79,7 +58,7 @@ npm run build        # production build
 npm run typecheck    # tsc --noEmit
 ```
 
-Node 20 or newer. The stack is Next.js (App Router) with TypeScript and no CSS framework: D10's tokens in `app/tokens.css` are the design system. See DECISION-008 for why, and for the five spec requirements that narrowed the choice.
+Node 20 or newer. The stack is Next.js (App Router) with TypeScript and no CSS framework: the tokens in `app/tokens.css`, derived from `DESIGN.md`, are the design system. See DECISION-008 for why, and for the five spec requirements that narrowed the choice.
 
 ## Status
 
