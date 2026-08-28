@@ -22,7 +22,7 @@ Core behaviors defined in the specs:
 - **Journey syncs, wallet does not.** The journey and answers persist to a backend keyed to a phone stub; documents stay on the device they were added to.
 - **Honest about what is real.** A global "What's real and what's mocked" screen (S11) is reachable from every screen.
 
-**Seeded coverage:** Assam (canonical) and Maharashtra. The state picker is deliberately limited to these two; any other state routes to national helpline content.
+**Seeded coverage:** Assam (canonical) and Maharashtra (an assumed default, pending the D9 assumptions register). The state picker is deliberately limited to these two; any other state routes to national helpline content.
 
 **Accessibility target:** WCAG 2.1 AA, with additional dynamic-focus, live-region and locale-format rules layered on top. Screen-reader labels are authored in the selected language, never English.
 
