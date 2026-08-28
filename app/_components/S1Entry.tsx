@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { speak } from "../_lib/speak";
 import { withLocale } from "../_lib/nav";
 import {
@@ -22,6 +22,18 @@ import styles from "../page.module.css";
  * Takes plain strings, never a LocaleDefinition (see i18n/index.ts for
  * the payload convention).
  */
+
+/** sbn.dest is a one-shot handoff, not a live store: it never changes
+ *  within a mount, so the subscription is a no-op and the snapshot is a
+ *  plain read. Only internal paths are honoured. */
+function subscribeSessionDest(): () => void {
+  return () => {};
+}
+function getSessionDest(): string | null {
+  if (typeof sessionStorage === "undefined") return null;
+  const dest = sessionStorage.getItem("sbn.dest");
+  return dest && dest.startsWith("/") ? dest : null;
+}
 
 export interface S1EntryProps {
   localeCode: string;
@@ -47,6 +59,20 @@ export function S1Entry({ localeCode, preferredCode, fromS2, tiles, strings }: S
     getJourneyServerSnapshot,
   );
   const [audioFailed, setAudioFailed] = useState(false);
+  /** N5: a deep link that arrived with no journey preserved its
+     destination under sbn.dest (S6/S8 write it). Read through
+     useSyncExternalStore so the server snapshot is null and hydration
+     never mismatches; the Continue card returns the user there once a
+     journey exists, and the memory is cleared after it is used. */
+  const destHref = useSyncExternalStore(
+    subscribeSessionDest,
+    getSessionDest,
+    () => null,
+  );
+
+  useEffect(() => {
+    if (journey && destHref) sessionStorage.removeItem("sbn.dest");
+  }, [journey, destHref]);
 
   const activeTasks = journey?.tasks.filter((t) => !t.archived) ?? [];
   const hasActiveJourney =
@@ -69,7 +95,10 @@ export function S1Entry({ localeCode, preferredCode, fromS2, tiles, strings }: S
       ) : null}
 
       {hasActiveJourney ? (
-        <Link href={withLocale("/saved", localeCode)} className={`${styles.continueCard} pressable`}>
+        <Link
+          href={destHref ? withLocale(destHref, localeCode) : withLocale("/saved", localeCode)}
+          className={`${styles.continueCard} pressable`}
+        >
           <span className={styles.continueTitle}>{strings.continueTitle}</span>
           {activeTasks.length > 0 ? (
             <span className={styles.continueDescriptor}>

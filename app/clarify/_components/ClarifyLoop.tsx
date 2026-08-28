@@ -613,7 +613,9 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
               className={`${styles.primary} pressable`}
               onClick={() => {
                 setSheetOpen(false);
-                router.push(withLocale("/help", localeCode));
+                // Entry (c): the state-isn't-here sheet has no state
+                // scope, so S10 renders its national variant (D3 S10).
+                router.push(withLocale("/help?national=1", localeCode));
               }}
             >
               {sheetHelpLabel}

@@ -2,6 +2,12 @@ import type { S2Strings } from "./screens/s2";
 import type { S3Strings } from "./screens/s3";
 import type { S4Strings } from "./screens/s4";
 import type { S5Strings } from "./screens/s5";
+import type { S6Strings } from "./screens/s6";
+import type { S7Strings } from "./screens/s7";
+import type { S8Strings } from "./screens/s8";
+import type { S9Strings } from "./screens/s9";
+import type { S10Strings } from "./screens/s10";
+import type { S11Strings } from "./screens/s11";
 import type { SH1Strings } from "./screens/sh1";
 
 /**
@@ -61,6 +67,18 @@ export interface BaseStrings {
   "error.E01": string;
   "error.O01": string;
   "offline.reconnected": string;
+
+  /* ---- shared provenance labels (C4), used by S5/S6/S10/S11 --------- */
+  "meta.source": string;
+  "meta.verified": string;
+  "meta.state": string;
+
+  /* ---- shared document names (Appendix A set), used by S6/S7/S8/S10 -- */
+  "doc.DOC-MED": string;
+  "doc.DOC-ID-D": string;
+  "doc.DOC-ID-I": string;
+  "doc.DOC-ADDR": string;
+  "doc.DOC-DEATH": string;
 }
 
 export type Strings = BaseStrings &
@@ -68,6 +86,12 @@ export type Strings = BaseStrings &
   S3Strings &
   S4Strings &
   S5Strings &
+  S6Strings &
+  S7Strings &
+  S8Strings &
+  S9Strings &
+  S10Strings &
+  S11Strings &
   SH1Strings;
 
 /** Script class drives layout direction and the line-height token set. */

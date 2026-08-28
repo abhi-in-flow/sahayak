@@ -249,7 +249,16 @@ export function mergeGraphs(
     const old = prevByCode.get(task.code);
     if (old) {
       // Preserve what the user earned; refresh the computed shape.
-      tasks.push({ ...task, status: old.status, ackNumber: old.ackNumber });
+      // completedAt is earned at S6/S8 completion and must survive
+      // recomputes exactly like the ack number (P5); preCompleted is
+      // NOT preserved: it recomputes from the answers so a Q1 flip
+      // clears it (D4 4.4).
+      tasks.push({
+        ...task,
+        status: old.status,
+        ackNumber: old.ackNumber,
+        completedAt: old.completedAt,
+      });
     } else {
       added.push(task);
       tasks.push(task);

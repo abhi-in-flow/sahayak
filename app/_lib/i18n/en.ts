@@ -4,6 +4,12 @@ import { enS2 } from "./screens/s2";
 import { enS3 } from "./screens/s3";
 import { enS4 } from "./screens/s4";
 import { enS5 } from "./screens/s5";
+import { enS6 } from "./screens/s6";
+import { enS7 } from "./screens/s7";
+import { enS8 } from "./screens/s8";
+import { enS9 } from "./screens/s9";
+import { enS10 } from "./screens/s10";
+import { enS11 } from "./screens/s11";
 import { enSH1 } from "./screens/sh1";
 
 /**
@@ -23,6 +29,12 @@ export const en: LocaleDefinition = {
     ...enS3,
     ...enS4,
     ...enS5,
+    ...enS6,
+    ...enS7,
+    ...enS8,
+    ...enS9,
+    ...enS10,
+    ...enS11,
     ...enSH1,
   },
 };

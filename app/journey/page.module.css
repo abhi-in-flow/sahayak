@@ -47,19 +47,6 @@
   color: var(--ink-700);
 }
 
-/* The ring is decorative; the literal "{done} of {n} done" is the
-   accessible carrier (DP-4). Track line-300, fill accent-700. */
-.ringTrack {
-  fill: none;
-  stroke: var(--line-300);
-}
-
-.ringFill {
-  fill: none;
-  stroke: var(--accent-700);
-  stroke-linecap: round;
-}
-
 /* C3 honesty chip: persistent, quiet (D10 10.8). */
 .honesty {
   align-self: flex-start;

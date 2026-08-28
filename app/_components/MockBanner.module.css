@@ -1,0 +1,11 @@
+/* Loud practice surface (D10 10.8). Full-bleed, radius 0, system
+   furniture; the hatch and edge come from the globals utilities. */
+.banner {
+  padding: var(--sp-3) var(--sp-4);
+  color: var(--ink-900);
+  font-size: var(--size-meta);
+  font-weight: 600;
+  line-height: var(--lh-body);
+  border-bottom: 1px solid var(--line-600);
+  border-radius: var(--radius-banner);
+}

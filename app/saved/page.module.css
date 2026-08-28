@@ -1,0 +1,427 @@
+/* S9 — Progress / Resume Dashboard. D3 S9; D10 10.7/10.9; D11 §1/§3.
+   Tokens only (DECISION-007): a raw hex here is a defect. The banner,
+   card and action treatments mirror app/journey/page.module.css (S5)
+   without importing it; M-1 is this screen's single motivated motion. */
+
+/* ---- loading / restoring (skeleton in the shape of the real content) --- */
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.restoringLabel {
+  color: var(--ink-700);
+  font-size: var(--size-body);
+}
+
+.headerSk {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.skLine {
+  flex: 1;
+  height: 44px;
+}
+
+/* The ring skeleton, in the shape of the ProgressRing. */
+.skRing {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.skCard {
+  height: 150px;
+}
+
+/* ---- empty interstitial (one line, then S1) ----------------------------- */
+
+.interstitial {
+  padding: var(--sp-6) 0;
+  color: var(--ink-700);
+  font-size: var(--size-body-lg);
+}
+
+/* ---- main column --------------------------------------------------------- */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-4) 0 var(--sp-4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.heading {
+  font-size: var(--size-title);
+}
+
+.progressText {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+/* ---- recompute diff banner (D11 §3 family: full-bleed, radius 0) -------- */
+
+.bannerDiff {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  background: var(--surface);
+  border-top: 1px solid var(--line-600);
+  border-bottom: 1px solid var(--line-600);
+  border-radius: var(--radius-banner);
+}
+
+.diffSummary {
+  font-size: var(--size-meta);
+  font-weight: 600;
+  color: var(--ink-700);
+}
+
+.diffToggle {
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--accent-800);
+  font-size: var(--size-meta);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* Expander content sits in --sunken (D11 §3). */
+.diffList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  background: var(--sunken);
+  border-radius: var(--radius-control);
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+.diffLine {
+  display: block;
+  overflow-wrap: break-word;
+}
+
+.diffDismiss {
+  align-self: flex-end;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-meta);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- the "Next" card (S5 Do-now treatment) ------------------------------- */
+
+.card {
+  position: relative;
+  display: block;
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+/* "Do this first": task card plus 2px accent border and an accent-100
+   header band. Exactly one exists (D3; D10 10.9). */
+.cardFirst {
+  border: 2px solid var(--accent-700);
+  padding: calc(var(--sp-4) - 1px);
+}
+
+.firstBand {
+  display: block;
+  margin: calc(-1 * (var(--sp-4) - 1px)) calc(-1 * (var(--sp-4) - 1px)) var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--accent-100);
+  color: var(--accent-800);
+  font-size: var(--size-meta);
+  font-weight: 600;
+  border-radius: calc(var(--radius-card) - 2px) calc(var(--radius-card) - 2px) 0 0;
+}
+
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+/* Stretched-link pattern: the card routes to S6, the provenance link
+   stays above it (z-index) and independently tappable. */
+.cardLink {
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
+.cardLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-card);
+}
+
+.cardLink:focus-visible {
+  outline: none;
+}
+
+.cardLink:focus-visible::after {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: calc(-1 * var(--focus-offset));
+}
+
+.taskName {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+}
+
+.department {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+/* P1-7 device note: a quiet chip, the honesty treatment (D10 10.8). */
+.deviceNote {
+  background: var(--sunken);
+  color: var(--ink-700);
+  font-size: var(--size-meta);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+}
+
+/* C4 provenance: discrete meta lines, never a separator run (D11 §1). */
+.provenance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: var(--sp-1);
+}
+
+.metaLine {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.metaLink {
+  position: relative;
+  z-index: 1;
+  color: var(--accent-800);
+  text-decoration: underline;
+  overflow-wrap: break-word;
+}
+
+/* ---- M-1, task unlock (D10 §10.7) ----------------------------------------
+   The one motivated animation on this screen: 400ms, transform and
+   opacity ONLY. The global reduced-motion rule collapses it; the JS
+   fallback (page.tsx) swaps to .unlockHold for the 200ms colour hold
+   instead of adding this class at all. */
+
+.unlockAnim {
+  animation: s9-unlock-rise 400ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes s9-unlock-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Reduced-motion fallback hold: the card renders accent-100, then the
+   class is removed after 200ms and the ground falls back to the card's
+   var(--surface). A hard class swap, NOT a transition, so the global
+   reduced-motion collapse cannot mute it. Declared after .card so the
+   later background wins while the class is present. */
+.unlockHold {
+  background: var(--accent-100);
+}
+
+/* ---- completed and waiting lists ------------------------------------------ */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.sectionTitle {
+  font-size: var(--size-title);
+}
+
+.rowList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.rowLink {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+  color: var(--ink-900);
+  text-decoration: none;
+}
+
+.rowMeta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+}
+
+/* Mock references render in the mono family (D10 10.8 practice
+   artefacts; the hatch itself is reserved and is not used here). */
+.monoRef {
+  font-family: var(--font-mono);
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+  overflow-wrap: break-word;
+}
+
+/* Quiet honesty chip for the waiting list (D10 10.8 weight). */
+.mockChip {
+  background: var(--sunken);
+  color: var(--ink-700);
+  font-size: var(--size-meta);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+}
+
+/* ---- sync status line ------------------------------------------------------- */
+
+.syncLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.syncSpan {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+.syncButton {
+  min-height: var(--target-min);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-meta);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- actions (focus order: change answers, full journey, share) ---------- */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.changeAnswers {
+  align-self: center;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  text-decoration: underline;
+}
+
+.secondary {
+  min-height: var(--cta-min-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.primary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- journeys switcher placeholder (single item, out of build scope) ----- */
+
+.switcher {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.switcherLabel {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.switcherSelect {
+  min-height: var(--target-min);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--ink-900);
+  font-family: inherit;
+  font-size: var(--size-body);
+}

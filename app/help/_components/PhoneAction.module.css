@@ -1,0 +1,52 @@
+/* S10 tap-to-call / copy affordance. */
+
+.call {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.call:hover {
+  color: var(--accent-700);
+}
+
+/* Non-telephony context: the number as text, a Copy button, and the
+   "Copied" confirmation. Discrete spans, no separators (D11 1). */
+.nonTelephony {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.number {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.copy {
+  min-height: var(--target-min);
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.copied {
+  color: var(--done-700);
+  font-size: var(--size-meta);
+  font-weight: 600;
+}

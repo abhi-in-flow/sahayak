@@ -46,10 +46,6 @@ export interface S5Strings {
   "s5.archivedNote": string;
   /** D3/D4 §4.4, verbatim. */
   "s5.preCompletedNote": string;
-  /** C4 provenance labels; values render as discrete lines (D11 §1). */
-  "s5.sourceLabel": string;
-  "s5.verifiedLabel": string;
-  "s5.stateLabel": string;
 
   /* ---- actions and states -------------------------------------------- */
   "s5.changeAnswers": string;
@@ -83,9 +79,6 @@ export const enS5: S5Strings = {
   "s5.offlineSubmit": "Practice submission needs a connection",
   "s5.archivedNote": "Completed earlier — no longer part of your journey",
   "s5.preCompletedNote": "You told us this is already registered",
-  "s5.sourceLabel": "Source:",
-  "s5.verifiedLabel": "Last verified:",
-  "s5.stateLabel": "State:",
 
   "s5.changeAnswers": "Change my answers",
   "s5.saveList": "Save this list",
@@ -120,9 +113,6 @@ export const hiS5: S5Strings = {
   "s5.offlineSubmit": "अभ्यास सबमिशन के लिए कनेक्शन चाहिए",
   "s5.archivedNote": "पहले पूरा हुआ — अब आपकी यात्रा का हिस्सा नहीं है",
   "s5.preCompletedNote": "आपने हमें बताया था कि यह पहले से पंजीकृत है",
-  "s5.sourceLabel": "स्रोत:",
-  "s5.verifiedLabel": "अंतिम जाँच:",
-  "s5.stateLabel": "राज्य:",
 
   "s5.changeAnswers": "मेरे जवाब बदलें",
   "s5.saveList": "यह सूची सेव करें",

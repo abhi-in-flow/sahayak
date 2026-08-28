@@ -8,6 +8,7 @@ import { DEFAULT_LOCALE, findLocale, t } from "@/app/_lib/i18n";
 import { DisclosureBanner, GlobalFooter, SkipLink } from "@/app/_components/Chrome";
 import { InlineNote } from "@/app/_components/InlineNote";
 import { StatusChip, type TaskStatus } from "@/app/_components/StatusChip";
+import { ProgressRing } from "@/app/_components/ProgressRing";
 import { SaveSheet } from "@/app/_components/SaveSheet/SaveSheet";
 import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
@@ -92,9 +93,6 @@ interface JourneyView {
   diffKey: string;
   manual: boolean;
 }
-
-const RING_RADIUS = 18;
-const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
 function JourneyScreen() {
   const params = useSearchParams();
@@ -263,7 +261,7 @@ function JourneyScreen() {
               // supply them (BUG-009), and a guess is banned (C4).
               <span className={styles.provenance}>
                 <span className={styles.metaLine}>
-                  {t(locale, "s5.sourceLabel")}{" "}
+                  {t(locale, "meta.source")}{" "}
                   <a
                     className={styles.metaLink}
                     href={def.sourceUrl}
@@ -274,10 +272,10 @@ function JourneyScreen() {
                   </a>
                 </span>
                 <span className={styles.metaLine}>
-                  {t(locale, "s5.verifiedLabel")} {def.lastVerified}
+                  {t(locale, "meta.verified")} {def.lastVerified}
                 </span>
                 <span className={styles.metaLine}>
-                  {t(locale, "s5.stateLabel")} {def.state}
+                  {t(locale, "meta.state")} {def.state}
                 </span>
               </span>
             ) : null}
@@ -364,29 +362,8 @@ function JourneyScreen() {
                   </p>
                 </div>
                 {/* DP-4: the ring is decorative; the literal count above
-                    always accompanies it. accent-700 on line-300. */}
-                <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
-                  <circle
-                    className={styles.ringTrack}
-                    cx="22"
-                    cy="22"
-                    r={RING_RADIUS}
-                    strokeWidth="4"
-                  />
-                  <circle
-                    className={styles.ringFill}
-                    cx="22"
-                    cy="22"
-                    r={RING_RADIUS}
-                    strokeWidth="4"
-                    strokeDasharray={RING_CIRCUMFERENCE}
-                    strokeDashoffset={
-                      RING_CIRCUMFERENCE *
-                      (1 - (activeTasks.length > 0 ? doneCount / activeTasks.length : 0))
-                    }
-                    transform="rotate(-90 22 22)"
-                  />
-                </svg>
+                    always accompanies it. */}
+                <ProgressRing done={doneCount} total={activeTasks.length} />
               </div>
 
               <span className={styles.honesty}>{t(locale, "s5.honestyChip")}</span>

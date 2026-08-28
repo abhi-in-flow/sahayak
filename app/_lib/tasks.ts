@@ -36,6 +36,19 @@ export interface TaskDefinition {
   lastVerified: string;
   /** Seeded state this content is scoped to. */
   state: string;
+  /**
+   * Appendix A wallet documents this task needs. Present only where a
+   * spec names the set; tasks without one are never doc-gated rather
+   * than guessed (C4). See documents.ts for the codes.
+   */
+  requiredDocuments?: readonly string[];
+  /**
+   * Sourced fee fact (offices.ts). Absent unless verified; S6 omits the
+   * section rather than faking it (the BUG-009 convention).
+   */
+  fee?: { text: string; sourceUrl: string; lastVerified: string };
+  /** Realistic processing range. Sourced or absent; a guess is banned. */
+  timelineDays?: { min: number; max: number };
 }
 
 /**
@@ -50,6 +63,17 @@ export const TASKS: readonly TaskDefinition[] = [
     sourceUrl: "https://crsorgi.gov.in/",
     lastVerified: "2026-08-28",
     state: "Assam",
+    // Appendix A names this exact wallet set for T1.
+    requiredDocuments: ["DOC-MED", "DOC-ID-D", "DOC-ID-I", "DOC-ADDR"],
+    // Sourced from GMC's official registration page (see offices.ts).
+    fee: {
+      text: "No fee if reported within 21 days. From day 22 to day 30 a late fee of Rs 2 applies.",
+      sourceUrl:
+        "https://gmc.assam.gov.in/information-services/registration-of-births-and-death",
+      lastVerified: "2026-08-28",
+    },
+    // A certificate-issuance range was never sourced; timelineDays stays
+    // absent and S6 omits the section rather than guessing (C4).
   },
 ];
 

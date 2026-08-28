@@ -55,6 +55,12 @@ export interface TaskState {
   archived: boolean;
   /** D4 §4.4: set when Q1 flips No->Yes and T1 renders pre-completed. */
   preCompleted?: boolean;
+  /**
+   * ISO date the task was completed here (S6 "already done" or S8
+   * submit). S9's completed list renders it; pre-completed tasks have
+   * none and say so instead of a fabricated date.
+   */
+  completedAt?: string;
 }
 
 /** S8 draft, keyed by task code. Never discarded on timeout (P4). */
@@ -82,6 +88,12 @@ export interface JourneyRecord {
   state: string | null;
   /** Dismissed diff/notice banners, so they are not re-shown (D4 §4.2). */
   dismissedBanners: string[];
+  /**
+   * Newest task `last_verified` date the user has been shown, so S9 can
+   * raise "steps were updated since you last checked" only when it is
+   * true. Optional: records from before batch 3 simply have not seen one.
+   */
+  lastVerifiedSeen?: string;
   updatedAt: string;
 }
 

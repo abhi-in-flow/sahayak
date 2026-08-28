@@ -1,0 +1,54 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-4) var(--sp-5);
+}
+
+.text {
+  color: var(--ink-700);
+  font-size: var(--size-body);
+}
+
+/* The destination host is the fact the decision rests on; it renders
+   as a discrete line, never joined to the sentence with a separator. */
+.host {
+  color: var(--ink-500);
+  font-size: var(--size-meta);
+  overflow-wrap: break-word;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  margin-top: var(--sp-2);
+}
+
+.continue {
+  min-height: var(--cta-min-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--sp-5);
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+}
+
+.stay {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}

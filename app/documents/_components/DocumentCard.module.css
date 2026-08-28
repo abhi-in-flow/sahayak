@@ -1,0 +1,269 @@
+/* S7 document card. D10 §10.9, D12 §4 S7. Tokens only; no raw hex. */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.card:focus-visible {
+  outline: none;
+}
+
+/* ---- head: thumbnail + name + chip ----------------------------------- */
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: 0;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+  min-height: var(--target-min);
+}
+
+.head:disabled {
+  cursor: default;
+}
+
+.thumb {
+  flex: none;
+  width: 64px;
+  height: 80px;
+  object-fit: cover;
+  background: var(--sunken);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+}
+
+.headText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.name {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+/* ---- local status chips (not StatusChip semantics, D12 §4 S7) -------- */
+
+.chip {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+  font-size: var(--size-meta);
+  /* Wrapping block with a minimum height, never a fixed pill (D10 10.4). */
+  min-height: 24px;
+}
+
+.chipIcon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.chipHave {
+  background: var(--done-100);
+  color: var(--done-700);
+  border: 1px solid var(--done-700);
+}
+
+.chipNeed {
+  background: var(--surface);
+  color: var(--ink-700);
+  /* Dashed: the uncertain/missing state carries the A6 shape channel. */
+  border: 1px dashed var(--line-600);
+}
+
+.chipSample {
+  background: var(--warn-100);
+  color: var(--warn-800);
+  border: 1px solid var(--warn-800);
+}
+
+.chipFailed {
+  background: var(--err-100);
+  color: var(--err-700);
+  border: 1px solid var(--err-700);
+}
+
+/* ---- used-by line ------------------------------------------------------ */
+
+.usedBy {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+/* ---- add toggle + add area --------------------------------------------- */
+
+.addToggle {
+  min-height: var(--target-min);
+  padding: 0 var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.addArea {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.actionRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.actionButton {
+  min-height: var(--target-min);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.capture {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-4);
+  background: var(--accent-700);
+  border: none;
+  border-radius: var(--radius-control);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.video {
+  display: block;
+  width: 100%;
+  background: var(--ink-900);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+}
+
+/* The file input is triggered programmatically by the Gallery button;
+   it is never focusable or visible itself. */
+.hiddenInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- upload progress (Loading state; determinate per D6 6.2) ---------- */
+
+.progressRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.progressLabel {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+.progressTrack {
+  height: 10px;
+  background: var(--sunken);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--accent-700);
+}
+
+.cancel {
+  align-self: flex-start;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- E-14 failure row -------------------------------------------------- */
+
+.failedRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+/* ---- label + remove ------------------------------------------------------ */
+
+.labelArea {
+  margin-top: var(--sp-1);
+}
+
+.input {
+  width: 100%;
+  min-height: var(--target-min);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font-family: inherit;
+  font-size: var(--size-body);
+}
+
+.remove {
+  min-height: var(--target-min);
+  padding: 0 var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--err-700);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- honesty (C3/P3), per card ------------------------------------------- */
+
+.mockSmall {
+  margin-top: var(--sp-1);
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}

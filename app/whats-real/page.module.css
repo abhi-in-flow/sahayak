@@ -1,0 +1,65 @@
+/* =========================================================================
+   S11 - What's real and what's mocked here. D3 S11; D12 4.
+   Static content only. Two-column rows at >=480px (label + note left,
+   chip right), stacked at the 360px baseline.
+   ========================================================================= */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) 0 var(--sp-4);
+}
+
+.heading {
+  font-size: var(--size-title);
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: flex;
+  flex-direction: column; /* 360px baseline: stacked */
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-4) 0;
+  border-bottom: 1px solid var(--line-300); /* decorative separator, D10 10.3 */
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+@media (min-width: 480px) {
+  .row {
+    flex-direction: row; /* label + note left, chip right */
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--sp-5);
+  }
+}
+
+.rowText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rowLabel {
+  font-weight: 600;
+}
+
+.rowNote {
+  color: var(--ink-700);
+}
+
+/* C1 restated as prose under the list. */
+.disclosure {
+  color: var(--ink-700);
+}

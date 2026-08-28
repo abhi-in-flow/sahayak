@@ -1,0 +1,177 @@
+/* =========================================================================
+   S10 - Offline Path & Human Help. D3 S10; D12 4.
+   360px baseline, tokens only, no decorative motion.
+
+   Two render trees share this module:
+   - .screenOnly  the screen UI, hidden when printing
+   - .printSheet  the one-page checklist, hidden on screen, shown in
+                  print. The checklist is the highest-value artefact for
+                  a low-literacy office visit (D3 S10), so it prints
+                  clean: no chrome, no banners, token colours only.
+   ========================================================================= */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) 0 var(--sp-4);
+}
+
+.heading {
+  font-size: var(--size-title);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.subHeading {
+  font-size: var(--size-title);
+}
+
+.entryName {
+  font-weight: 600;
+}
+
+.body {
+  color: var(--ink-700);
+}
+
+.address {
+  font-style: normal;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: var(--ink-700);
+}
+
+.addressLine {
+  overflow-wrap: anywhere;
+}
+
+.carryFor {
+  font-weight: 600;
+}
+
+.docList {
+  margin: 0;
+  padding-left: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.plainList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* One helpline per row: name, action, provenance; a decorative
+   separator between rows (line-300's permitted use, D10 10.3). */
+.entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--line-300);
+}
+
+.entry:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.externalLink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+/* C5 boundary statement, prominent: a sunken band with weight, so it
+   reads as a limit, not a footnote. */
+.boundary {
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--sunken);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+/* Provenance lines (C4): meta size in ink-500, discrete lines. */
+.provenance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.metaLine {
+  overflow-wrap: anywhere;
+}
+
+.sourceLink {
+  color: var(--ink-500);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+.sourceLink:hover {
+  color: var(--accent-800);
+}
+
+/* ---- print: one page, screen chrome hidden -------------------------- */
+
+.printSheet {
+  display: none;
+}
+
+@media print {
+  .screenOnly {
+    display: none !important;
+  }
+
+  .printSheet {
+    display: block;
+    background: var(--surface);
+    color: var(--ink-900);
+    font-size: var(--size-body);
+  }
+
+  .printTitle {
+    font-size: var(--size-title);
+    margin-bottom: var(--sp-4);
+  }
+
+  .printBlock {
+    margin-bottom: var(--sp-4);
+  }
+
+  .printName {
+    font-weight: 600;
+  }
+
+  .printList {
+    margin: var(--sp-2) 0 0;
+    padding-left: var(--sp-5);
+  }
+
+  .printMeta {
+    font-size: var(--size-meta);
+    color: var(--ink-700);
+  }
+}

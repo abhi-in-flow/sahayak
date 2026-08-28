@@ -1,0 +1,15 @@
+/* S11 Back: a small secondary control, 48px floor, tactile via .pressable. */
+
+.back {
+  align-self: flex-start;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-4);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  cursor: pointer;
+}

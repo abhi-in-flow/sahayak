@@ -125,6 +125,25 @@ p {
   }
 }
 
+/* The practice hatch (D10 10.8): 4px diagonal at 45deg, ink-900 at 8%
+   over warn-100. A pattern, not a colour, so it survives printing,
+   greyscale and colour-blindness; it means exactly one thing in the
+   product and no other surface may use it. */
+.hatch {
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgb(14 27 28 / 0.08) 0 4px,
+    transparent 4px 8px
+  );
+  background-color: var(--warn-100);
+}
+
+/* The 2px warn-800 top edge for loud practice surfaces (S8 mock banner,
+   practice artefacts). */
+.hatchEdge {
+  border-top: 2px solid var(--warn-800);
+}
+
 /* Page shell at the 360px baseline. */
 .shell {
   width: 100%;

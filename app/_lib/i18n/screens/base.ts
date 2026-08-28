@@ -47,6 +47,16 @@ export const enBase: BaseStrings = {
   "error.O01":
     "You're offline. Reading works; practice submission and voice need a connection.",
   "offline.reconnected": "You're back online.",
+
+  "meta.source": "Source:",
+  "meta.verified": "Last verified:",
+  "meta.state": "State:",
+
+  "doc.DOC-MED": "Medical Cause of Death Certificate",
+  "doc.DOC-ID-D": "Their ID proof",
+  "doc.DOC-ID-I": "Your ID proof",
+  "doc.DOC-ADDR": "Address proof",
+  "doc.DOC-DEATH": "Death Certificate (practice)",
 };
 
 export const hiBase: BaseStrings = {
@@ -84,4 +94,14 @@ export const hiBase: BaseStrings = {
   "error.O01":
     "आप ऑफ़लाइन हैं। पढ़ना काम करता है; अभ्यास सबमिशन और आवाज़ के लिए कनेक्शन चाहिए।",
   "offline.reconnected": "आप फिर से ऑनलाइन हैं।",
+
+  "meta.source": "स्रोत:",
+  "meta.verified": "अंतिम जाँच:",
+  "meta.state": "राज्य:",
+
+  "doc.DOC-MED": "मेडिकल मृत्यु-कारण प्रमाणपत्र",
+  "doc.DOC-ID-D": "उनका पहचान पत्र",
+  "doc.DOC-ID-I": "आपका पहचान पत्र",
+  "doc.DOC-ADDR": "पते का प्रमाण",
+  "doc.DOC-DEATH": "मृत्यु प्रमाणपत्र (अभ्यास)",
 };

@@ -1,0 +1,359 @@
+/* S6 — Task detail. D3 S6; D10 (visual law); D11 §1 (anti-slop).
+   Tokens only: a raw hex here is a defect (DECISION-007). */
+
+/* ---- page frame ------------------------------------------------------- */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-4) 0 var(--sp-4);
+}
+
+/* D10 scale: the S6 task title is `title` (20/1.40/600), one step below
+   the display size reserved for S1/S3e. */
+.heading {
+  font-size: var(--size-title);
+}
+
+/* ---- loading: skeleton in the shape of the real layout ---------------- */
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.skTitle {
+  height: 56px;
+}
+
+.skChip {
+  height: 28px;
+  width: 40%;
+}
+
+.skBlock {
+  height: 120px;
+}
+
+.skRow {
+  height: 48px;
+}
+
+.skCta {
+  height: var(--cta-min-height);
+}
+
+/* ---- sections ---------------------------------------------------------- */
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* Section headings sit one step under the h1 in the D10 scale. */
+.sectionTitle {
+  font-size: var(--size-body-lg);
+}
+
+/* ---- completion record (read-only done; D10: sunken = read-only) ------ */
+
+.record {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-4);
+  background: var(--sunken);
+  border-radius: var(--radius-card);
+}
+
+.recordLine {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+/* Practice references render in mono, the practice-artefact idiom. */
+.recordMono {
+  font-family: var(--font-mono);
+  color: var(--ink-900);
+  overflow-wrap: anywhere;
+}
+
+/* ---- locked unlock path: mirrors the Do-now treatment (2 px accent) --- */
+
+.unlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 2px solid var(--accent-700);
+  border-radius: var(--radius-card);
+}
+
+.unlockNote {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+/* ---- documents checklist ------------------------------------------------ */
+
+.docs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.docRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  min-height: var(--target-min);
+  padding: var(--sp-1) 0;
+  /* line-300 is decorative only (list separator), never a control border. */
+  border-bottom: 1px solid var(--line-300);
+}
+
+.docRow:last-child {
+  border-bottom: none;
+}
+
+.docIcon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  color: var(--done-700);
+}
+
+.docName {
+  flex: 1;
+  font-size: var(--size-body);
+  color: var(--ink-900);
+}
+
+.docState {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.docAdd {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* ---- where: online AND in person, both always --------------------------- */
+
+.whereBlocks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.whereBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.channel {
+  font-size: var(--size-meta);
+  font-weight: 600;
+  color: var(--ink-500);
+}
+
+/* The portal probe and the map link share the link-idiom treatment:
+   underlined accent (the underline is the non-colour channel, DP-4). */
+.portalLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  overflow-wrap: break-word;
+  text-align: start;
+}
+
+.officeName {
+  font-size: var(--size-body);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.addressLine {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+/* ---- fee (C6) ------------------------------------------------------------ */
+
+.feeText {
+  font-size: var(--size-body);
+}
+
+.feeNote {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+/* ---- rejection reasons ----------------------------------------------------- */
+
+.rejectList {
+  margin: 0;
+  padding-left: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.rejectList li {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+/* ---- provenance (C4): discrete meta lines, never a separator run ------ */
+
+.provenance {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.metaLine {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.metaLink {
+  color: var(--accent-800);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+
+/* ---- actions --------------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Disabled keeps its colours: the O-01 reason below carries "why"
+   (never silently grey, D10 §10.9); the reduced opacity only signals
+   inertness alongside that reason. */
+.primary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tertiary {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  text-decoration: underline;
+}
+
+/* O-01 offline chip in place of the rule-2 CTA (warn-100/warn-800,
+   cloud-off semantics carried by the words, not colour alone). */
+.offlineChip {
+  align-self: flex-start;
+  background: var(--warn-100);
+  color: var(--warn-800);
+  font-size: var(--size-meta);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-control);
+}
+
+.disabledReason {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+/* ---- unknown task code: honest not-found card ------------------------------- */
+
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.notFoundBody {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+/* ---- sheets ------------------------------------------------------------------ */
+
+.sheetActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding-top: var(--sp-2);
+}

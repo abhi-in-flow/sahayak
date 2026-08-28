@@ -1,0 +1,66 @@
+/* =========================================================================
+   S11 fact-status chips. D10 10.4 anatomy: tint + dark text + 1px border
+   in the dark tone + distinct icon silhouette. Wrapping blocks with a
+   minimum height, never fixed-height pills; no ellipsis anywhere (D6 6.3).
+   ========================================================================= */
+
+.chip {
+  display: inline-flex;
+  align-items: flex-start; /* icon aligns to the first line */
+  gap: var(--sp-2);
+  min-height: 28px; /* a floor, never a height */
+  padding: 5px 10px;
+  border-radius: var(--radius-control);
+  border: 1px solid;
+  font-size: var(--size-meta);
+  line-height: var(--lh-tight);
+  max-width: 100%;
+  flex: none;
+}
+
+.icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+
+.word {
+  font-weight: 600;
+}
+
+/* ---- variants. Colour is the third channel, after text and shape ---- */
+
+.real {
+  background: var(--done-100);
+  color: var(--done-700);
+  border-color: var(--done-700);
+}
+
+.practice {
+  background: var(--warn-100);
+  color: var(--warn-800);
+  border-color: var(--warn-800);
+}
+
+.sample {
+  background: var(--accent-100);
+  color: var(--accent-800);
+  border-color: var(--accent-800);
+}
+
+.static {
+  background: var(--accent-100);
+  color: var(--accent-800);
+  border-color: var(--accent-800);
+}
+
+/* Dashed border marks the not-handled state the way the uncertain
+   StatusChip variants do: the shape channel survives greyscale and
+   print (A6, DP-4). */
+.na {
+  background: var(--sunken);
+  color: var(--ink-500);
+  border-color: var(--ink-500);
+  border-style: dashed;
+}

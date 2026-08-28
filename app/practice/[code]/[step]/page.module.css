@@ -1,0 +1,438 @@
+/* S8, the guided mock submission. D3 S8; D10 10.9; D12 §4. Tokens only
+   (DECISION-007): a raw hex in any component is a defect. */
+
+/* ---- loading: skeleton fields in the shape of the step ----------------- */
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.skLine {
+  height: 32px;
+}
+
+.skField {
+  height: 96px;
+}
+
+.skAck {
+  height: 140px;
+}
+
+/* ---- page frame ---------------------------------------------------------- */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-4) 0 var(--sp-4);
+}
+
+.stepOf {
+  font-size: var(--size-meta);
+  font-weight: 600;
+  color: var(--ink-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.heading {
+  font-size: var(--size-title);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+/* ---- error summary (D10 10.9: err-100 / err-700, role=alert) ------------ */
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--err-100);
+  border: 1px solid var(--err-700);
+  border-radius: var(--radius-card);
+}
+
+.summaryHeading {
+  color: var(--err-700);
+  font-size: var(--size-body);
+}
+
+.summaryList {
+  margin: 0;
+  padding: 0 0 0 var(--sp-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.summaryLink {
+  color: var(--err-700);
+  font-size: var(--size-body);
+  text-decoration: underline;
+}
+
+/* ---- fields --------------------------------------------------------------- */
+
+.fieldBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.fieldBlock > :first-child {
+  align-self: stretch;
+}
+
+.control {
+  width: 100%;
+  min-height: var(--cta-min-height);
+  padding: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.control:disabled {
+  background: var(--sunken);
+  color: var(--ink-500);
+}
+
+.textarea {
+  resize: vertical;
+}
+
+/* Date fields render a native picker icon the browser colours; keep the
+   control legible when the value is empty. */
+.control[type="date"] {
+  min-height: var(--cta-min-height);
+}
+
+/* Non-blocking date guidance: warn family, quiet weight (D10 10.4). */
+.guidance {
+  background: var(--warn-100);
+  color: var(--warn-800);
+  font-size: var(--size-meta);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-control);
+}
+
+/* Pre-fill badge: small accent-100 chip, dark accent text. */
+.prefill {
+  background: var(--accent-100);
+  color: var(--accent-800);
+  font-size: var(--size-meta);
+  padding: 4px 10px;
+  border-radius: var(--radius-control);
+}
+
+/* ---- radio groups (compact S3 option idiom) ------------------------------ */
+
+.options {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  align-self: stretch;
+}
+
+.legend {
+  padding: 0;
+  font-size: var(--size-label);
+  font-weight: 500;
+}
+
+.optionList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+/* Selected = 2px accent border + accent-100 ground (D10 10.9): the
+   inset shadow doubles the 1px border without a layout shift. */
+.optionSelected {
+  border-color: var(--accent-700);
+  box-shadow: inset 0 0 0 1px var(--accent-700);
+  background: var(--accent-100);
+}
+
+/* The hidden radio focuses, the box shows it (A8). */
+.option:focus-within {
+  outline: var(--focus-ring-width) solid var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.optionText {
+  font-size: var(--size-body-lg);
+  color: var(--ink-900);
+}
+
+.helperText {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.errorText {
+  font-size: var(--size-meta);
+  color: var(--err-700);
+}
+
+/* ---- per-field dictation -------------------------------------------------- */
+
+.micWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.mic {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--target-min);
+  padding: 0 var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mic:disabled {
+  background: var(--sunken);
+  color: var(--ink-500);
+  cursor: default;
+}
+
+/* Listening is a state change, not an animation (D10 10.7). */
+.micListening {
+  border-color: var(--accent-700);
+  box-shadow: inset 0 0 0 1px var(--accent-700);
+  background: var(--accent-100);
+}
+
+.micReason {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+/* ---- review groups ---------------------------------------------------------- */
+
+.reviewGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.groupTitle {
+  font-size: var(--size-body-lg);
+  color: var(--ink-700);
+  border-bottom: 1px solid var(--line-300);
+  padding-bottom: var(--sp-2);
+}
+
+/* ---- actions ----------------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.primary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.secondary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.tertiary {
+  align-self: center;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tertiary:disabled {
+  color: var(--ink-500);
+  cursor: default;
+}
+
+/* ---- submitting window (determinate, non-cancellable) ------------------------- */
+
+.progressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.progressLabel {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+  font-weight: 600;
+}
+
+.progressTrack {
+  height: 12px;
+  background: var(--sunken);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--accent-700);
+  border-radius: var(--radius-control);
+}
+
+/* ---- cancel sheet --------------------------------------------------------------- */
+
+.sheetActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+/* ---- done: the practice artefact ------------------------------------------------- */
+
+.doneHeading {
+  font-size: var(--size-display);
+}
+
+.doneHeading:focus-visible {
+  outline: none;
+}
+
+/* Loud practice artefact (D10 10.8): hatch + edge from the globals
+   utilities, the ack in mono at the primary-action floor. */
+.ackBand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-4);
+  border-radius: var(--radius-banner);
+  border-bottom: 1px solid var(--line-600);
+}
+
+.ackLabel {
+  font-size: var(--size-meta);
+  font-weight: 600;
+  color: var(--ink-700);
+}
+
+.ackNumber {
+  font-family: var(--font-mono);
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: break-word;
+}
+
+.ackNote {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+.doneSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.doneSectionTitle {
+  font-size: var(--size-body-lg);
+}
+
+.doneBody {
+  color: var(--ink-700);
+}
+
+/* P1-3 auto-add confirmation, inline, positive tint. */
+.added {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--done-100);
+  border: 1px solid var(--done-700);
+  border-radius: var(--radius-card);
+}
+
+.addedText {
+  color: var(--done-700);
+  font-weight: 600;
+}

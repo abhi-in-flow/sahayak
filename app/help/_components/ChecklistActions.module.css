@@ -1,0 +1,34 @@
+/* S10 checklist actions. Primary CTA treatment for print (D10 10.9),
+   secondary for share. */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.print {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shareButton {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}

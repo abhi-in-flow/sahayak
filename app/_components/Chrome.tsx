@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { LocaleDefinition } from "@/app/_lib/i18n";
 import { t } from "@/app/_lib/i18n";
+import { withLocale } from "@/app/_lib/nav";
 import styles from "./Chrome.module.css";
 
 /**
@@ -25,7 +26,9 @@ export function DisclosureBanner({ locale }: { locale: LocaleDefinition }) {
 export function GlobalFooter({ locale }: { locale: LocaleDefinition }) {
   return (
     <footer className={styles.footer}>
-      <Link href="/whats-real" className={styles.footerLink}>
+      {/* withLocale: Hindi users following the footer must land on the
+          Hindi S11, not the server-default English one. */}
+      <Link href={withLocale("/whats-real", locale.code)} className={styles.footerLink}>
         {t(locale, "chrome.whatsReal")}
       </Link>
     </footer>

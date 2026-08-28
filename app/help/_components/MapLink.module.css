@@ -1,0 +1,38 @@
+/* S10 map link and its offline reason. D10 10.9: a disabled control
+   carries its reason directly below, in ink-700, never silently greyed. */
+
+.mapLink {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  font-weight: 600;
+  text-decoration: underline; /* the non-colour channel, DP-4 */
+  overflow-wrap: anywhere;
+}
+
+.mapLink:hover {
+  color: var(--accent-700);
+}
+
+/* Offline: not a link. Dashed border marks it as the unavailable path
+   the way the uncertain chips do (D10 10.4), and the reason sits below. */
+.mapDisabled {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-3);
+  border: 1px dashed var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-500);
+  font-size: var(--size-body);
+}
+
+.offlineReason {
+  margin-top: var(--sp-1);
+  color: var(--ink-700);
+  font-size: var(--size-meta);
+}

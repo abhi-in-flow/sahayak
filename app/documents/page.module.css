@@ -1,0 +1,189 @@
+/* S7 — Document Wallet. D3 S7; D10 §10.9; D12 §4 S7. Tokens only. */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-4) 0;
+}
+
+.heading {
+  font-size: var(--size-title);
+}
+
+/* ---- loading: skeleton in the shape of the real content -------------- */
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.skLine {
+  height: 32px;
+}
+
+.skCard {
+  height: 180px;
+}
+
+/* ---- coverage summary + reuse visualisation --------------------------- */
+
+.coverage {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+.graph {
+  /* The SVG is decorative (aria-hidden); the sentence above carries it. */
+  margin-top: calc(-1 * var(--sp-3));
+}
+
+/* ---- honesty surface (C3/P3): quiet, persistent, never dismissible ---- */
+
+.mockNotice {
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--sunken);
+  border-radius: var(--radius-control);
+  color: var(--ink-700);
+  font-size: var(--size-meta);
+}
+
+/* ---- E-17 removal list ------------------------------------------------- */
+
+.quota {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.quotaList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.quotaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+}
+
+.quotaName {
+  font-size: var(--size-body);
+  color: var(--ink-900);
+}
+
+.quotaRemove {
+  flex: none;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--err-700);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- empty state ---------------------------------------------------------- */
+
+.empty {
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+  color: var(--ink-700);
+}
+
+/* ---- card list --------------------------------------------------------------- */
+
+.cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+/* ---- continue exit: prominent, primary-weight ------------------------------- */
+
+.continue {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--cta-min-height);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--accent-700);
+  border-radius: var(--radius-control);
+  color: var(--surface);
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+/* ---- sheets ------------------------------------------------------------------ */
+
+.sheetBody {
+  font-size: var(--size-body);
+  color: var(--ink-700);
+}
+
+.sheetActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.danger {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-4);
+  background: var(--err-700);
+  border: none;
+  border-radius: var(--radius-control);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.secondary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.previewImage {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  object-fit: contain;
+  background: var(--sunken);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+}
+
+.usedBy {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}

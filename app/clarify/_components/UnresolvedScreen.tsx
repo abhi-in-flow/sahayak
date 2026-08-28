@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { answeredCount } from "@/app/_lib/journey/compute";
+import { answeredCount, recordedValue } from "@/app/_lib/journey/compute";
 import { withLocale } from "@/app/_lib/nav";
 import { TASKS } from "@/app/_lib/tasks";
 import {
@@ -93,7 +93,12 @@ export function UnresolvedScreen(props: UnresolvedScreenProps) {
   }
 
   function openHelp() {
-    router.push(withLocale("/help", localeCode));
+    // D3 S10: the state-scoped variant needs a state. Browse users may
+    // have skipped the machine entirely, so without a Q2 answer this is
+    // the national variant (entry c's "no state scope" content).
+    const state = record ? recordedValue(record.answers, "state") : undefined;
+    const scope = state && state !== "unknown" ? "/help" : "/help?national=1";
+    router.push(withLocale(scope, localeCode));
   }
 
   /** Browse card (D3 S3e): manual-journey mode. Writes source and the

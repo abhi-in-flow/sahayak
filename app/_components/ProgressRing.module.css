@@ -1,0 +1,10 @@
+.track {
+  fill: none;
+  stroke: var(--line-300);
+}
+
+.fill {
+  fill: none;
+  stroke: var(--accent-700);
+  stroke-linecap: round;
+}
