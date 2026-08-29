@@ -1,6 +1,7 @@
 import {
   mutate as persistMutate,
   onExternalChange,
+  onMutate,
   readJourney,
 } from "../storage/local";
 import type { JourneyRecord } from "../storage/schema";
@@ -26,6 +27,15 @@ function notify(): void {
   for (const listener of listeners) listener();
 }
 
+/* A raw mutate() write in THIS tab (the capture screens' autosave, the
+   S5 recompute merge, the banner dismissal) must invalidate the snapshot
+   just like another tab's write does: /clarify/1's guard reads this
+   cache, and a stale null here is an infinite S2<->S3 bounce (BUG-012). */
+onMutate(() => {
+  cache = undefined;
+  notify();
+});
+
 export function subscribeJourney(listener: () => void): () => void {
   listeners.add(listener);
   // D4 4.5: another tab's write invalidates this tab's snapshot.
@@ -50,12 +60,11 @@ export function getJourneyServerSnapshot(): null {
   return null;
 }
 
-/** mutate() through the store: one write, one invalidation, one notify. */
+/** The screens' named write path. Invalidation and notify are no longer
+ *  done here: every persistMutate write fires the onMutate wiring above,
+ *  so a store write and a raw write behave identically (BUG-012). */
 export function updateJourney(
   change: (draft: JourneyRecord) => void,
 ): JourneyRecord | null {
-  const next = persistMutate(change);
-  cache = undefined;
-  notify();
-  return next;
+  return persistMutate(change);
 }

@@ -77,6 +77,7 @@ npm install
 npm run dev          # http://localhost:3000
 npm run build        # production build
 npm run typecheck    # tsc --noEmit
+npm test             # vitest run
 ```
 
 Node 20 or newer. The stack is Next.js (App Router) with TypeScript and no CSS framework: the tokens in `app/tokens.css`, derived from `DESIGN.md`, are the design system. See DECISION-008 for why, and for the five spec requirements that narrowed the choice.
@@ -85,7 +86,7 @@ Node 20 or newer. The stack is Next.js (App Router) with TypeScript and no CSS f
 
 Early implementation. The stack is chosen (DECISION-008) and the foundation is in place: design tokens, the string layer, global chrome, S1, the D4 persistence layer (T-LOCAL, T-IDB, T-SRV) and the T-CACHE service worker.
 
-`/api/journey` is a development stub: in-memory, per-process, and not the backend. There is no test suite yet.
+`/api/journey` is a development stub: in-memory, per-process, and not the backend. The only test suite is the T-LOCAL read-layer contract (`npm test`), added as the BUG-012 regression; there are no screen-level tests yet.
 
 **Blocked on the author:** tasks T1 to T9 are referenced 43 times across the specs but never enumerated (BUG-009, P0). Only T1 is identifiable. S1's no-JS fallback, S5's journey map, S6 and the S3e browse journeys cannot be completed without the roster, and the missing entries are deliberately not invented: C4 requires a source and verification date on every seeded item, and D10 §10.2 forbids placeholder government content.
 

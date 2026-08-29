@@ -66,6 +66,19 @@ export function writeSaveKey(key: string): void {
 /* journey record                                                      */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Same-tab write notification. The browser fires the `storage` event
+ * only in tabs OTHER than the writer, so a write in this tab is silent
+ * to every subscriber in it; read layers register here instead. Fired
+ * after the write lands, only on success.
+ */
+const mutateListeners = new Set<() => void>();
+
+export function onMutate(listener: () => void): () => void {
+  mutateListeners.add(listener);
+  return () => mutateListeners.delete(listener);
+}
+
 export function readJourney(): JourneyRecord | null {
   const raw = storage()?.getItem(STORAGE_KEYS.journey);
   if (!raw) return null;
@@ -85,6 +98,14 @@ export function readJourney(): JourneyRecord | null {
  * Returns the written record, or null if storage is unavailable. Creates
  * the journey if none exists, because D3 has no screen that mutates a
  * journey which does not yet exist.
+ *
+ * Every same-tab write flows through here, which makes mutate the one
+ * choke point that can invalidate same-tab read layers: onMutate exists
+ * so the journey store's cached snapshot cannot survive a write that
+ * bypassed updateJourney (BUG-012: the capture screens' autosave did
+ * exactly that, and /clarify/1's guard then read a journey that no
+ * longer existed). Cross-tab invalidation stays on the storage event
+ * (onExternalChange).
  */
 export function mutate(
   change: (draft: JourneyRecord) => void,
@@ -108,6 +129,7 @@ export function mutate(
     // is the wallet's job, not this module's.
     return null;
   }
+  for (const listener of mutateListeners) listener();
   return next;
 }
 
