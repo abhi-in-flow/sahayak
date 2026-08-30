@@ -1,0 +1,283 @@
+/* VoiceRail: the voice corridor's persistent bottom bar (DESIGN.md D10,
+   voice tier). Fixed furniture like the S2 composer it replaces: same
+   480px cap, same offset above the TabBar (70px + safe area).
+
+   Motion is the V-tier (D10 10.7): V-1 waveform (in Waveform.module.css),
+   V-2 breath on live states, V-3 caption fade. Opacity and transform
+   only; the global prefers-reduced-motion collapse covers V-2/V-3 and
+   Waveform carries its own V-1 fallback. */
+
+.wrap {
+  position: fixed;
+  left: 50%;
+  bottom: calc(70px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  background: var(--page);
+  border-top: 1px solid var(--line-300);
+}
+
+/* V-3: ghost interim caption. Secondary ink on the page so the words
+   read as in-flight, not as sent. */
+.caption {
+  margin: 0;
+  padding: 0 var(--sp-1);
+  font-size: var(--size-body);
+  line-height: var(--lh-body);
+  color: var(--ink-500);
+  animation: caption-in var(--dur-caption) ease-out;
+}
+
+@keyframes caption-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 64px;
+  padding: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+}
+
+/* V-2: the glow lives on an ::after so the breath animates opacity
+   only - never box-shadow (transform/opacity rule, D10 10.7). */
+.pillLive {
+  position: relative;
+  border-color: var(--accent-700);
+}
+
+.pillLive::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: var(--voice-glow);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: breath var(--dur-breath) ease-in-out infinite;
+}
+
+@keyframes breath {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.wave {
+  flex: 1;
+  min-width: 0;
+}
+
+.liveLabel {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  white-space: nowrap;
+}
+
+.idleLabel {
+  flex: 1;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.iconBtn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-min);
+  height: var(--target-min);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-700);
+  cursor: pointer;
+}
+
+.iconBtnActive {
+  background: var(--accent-100);
+  border-color: var(--accent-700);
+  color: var(--accent-800);
+}
+
+/* transcribing / thinking / speaking rows */
+.stateRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--sp-2);
+}
+
+.breath {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent-700);
+  animation: dot-breath var(--dur-breath) ease-in-out infinite;
+}
+
+@keyframes dot-breath {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.stateLabel {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.stateDetail {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.speakBars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+}
+
+.speakBars i {
+  width: 3px;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--accent-700);
+  animation: speak-bar 0.85s ease-in-out infinite;
+}
+
+.speakBars i:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.speakBars i:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.speakBars i:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+@keyframes speak-bar {
+  0%,
+  100% {
+    transform: scaleY(0.45);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.listenAgain {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font: inherit;
+  font-size: var(--size-label);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.reason {
+  margin: 0;
+  padding: 0 var(--sp-1);
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+/* corridor step segments */
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-1);
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--line-600);
+}
+
+/* shape carries state, never colour alone (A6): done = filled,
+   current = ring + bold, upcoming = small grey. */
+.done .dot {
+  background: var(--accent-700);
+}
+
+.now {
+  color: var(--ink-900);
+  font-weight: 600;
+}
+
+.now .dot {
+  width: 10px;
+  height: 10px;
+  background: var(--surface);
+  border: 2px solid var(--accent-700);
+}
+
+.segmentDetail {
+  color: var(--ink-500);
+  font-weight: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pillLive::after,
+  .breath,
+  .speakBars i {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .caption {
+    animation: none;
+  }
+}

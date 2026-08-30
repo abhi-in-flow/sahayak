@@ -40,6 +40,15 @@ export interface S3Strings {
   /** D5 5.1 E-09 verbatim. */
   "s3.e09": string;
 
+  /* ---- voice corridor (the rail is the answer surface) ---------------- */
+  /** Detail beside the "Clarify" corridor segment, e.g. "3 of 5". */
+  "s3.corridorDetail": string;
+  /** Heard echo chip (M-2 territory): what was heard, and the answer it
+   *  matched, shown ~600 ms before the loop advances. {text} is the
+   *  utterance, {answer} the matched option label. */
+  "s3.echo.heard": string;
+  "s3.echo.answer": string;
+
   /* ---- E-03 retry card (D5 5.1 verbatim) ----------------------------- */
   "s3.e03.message": string;
   "s3.e03.retry": string;
@@ -113,6 +122,10 @@ export const enS3: S3Strings = {
   "s3.didYouMean": "Did you mean…",
   "s3.e09": "Tap the closest one.",
 
+  "s3.corridorDetail": "{n} of {total}",
+  "s3.echo.heard": "Heard: {text}",
+  "s3.echo.answer": "Answer: {answer}",
+
   "s3.e03.message": "This is taking longer than usual.",
   "s3.e03.retry": "Try again",
   "s3.e03.browse": "Browse common situations instead",
@@ -183,6 +196,10 @@ export const hiS3: S3Strings = {
   "s3.micHoldStop": "रोकने के लिए छोड़ें",
   "s3.didYouMean": "क्या आपका मतलब इनमें से किसी से था?",
   "s3.e09": "सबसे नज़दीकी विकल्प चुनें।",
+
+  "s3.corridorDetail": "{total} में से {n}",
+  "s3.echo.heard": "सुना: {text}",
+  "s3.echo.answer": "जवाब: {answer}",
 
   "s3.e03.message": "इसमें आम से ज़्यादा समय लग रहा है।",
   "s3.e03.retry": "फिर कोशिश करें",

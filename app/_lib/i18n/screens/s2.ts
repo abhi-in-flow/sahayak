@@ -67,6 +67,10 @@ export interface S2Strings {
   "s2.a11yStopped": string;
   "s2.transcribing": string;
 
+  /* ---- Talk loop recap (voice stage) -------------------------------- */
+  "s2.recap": string;
+  "s2.recap.title": string;
+
   /* ---- Talk loop (type or voice, then steps) ------------------------ */
   "s2.talk.helper": string;
   "s2.talk.honesty": string;
@@ -128,6 +132,9 @@ export const enS2: S2Strings = {
   "s2.a11yStarted": "Listening.",
   "s2.a11yStopped": "Stopped listening.",
   "s2.transcribing": "Writing down what you said…",
+
+  "s2.recap": "Recap",
+  "s2.recap.title": "So far",
 
   "s2.talk.helper":
     "Speak or type. I will ask only if something is missing, then build your to-do list from our saved directory.",
@@ -194,6 +201,9 @@ export const hiS2: S2Strings = {
   "s2.a11yStarted": "सुन रहे हैं।",
   "s2.a11yStopped": "सुनना बंद कर दिया।",
   "s2.transcribing": "आपकी बात लिख रहे हैं…",
+
+  "s2.recap": "सारांश",
+  "s2.recap.title": "अब तक",
 
   "s2.talk.helper":
     "बोलिए या टाइप करें। कमी होने पर ही सवाल पूछूँगा, फिर हमारी सेव निर्देशिका से काम की सूची बनाऊँगा।",

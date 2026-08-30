@@ -91,6 +91,23 @@ export function writeOnboarded(): void {
   storage()?.setItem(STORAGE_KEYS.onboarded, "1");
 }
 
+/* ------------------------------------------------------------------ */
+/* read-aloud preference (voice corridor)                              */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Inverted flag: read-aloud is on by default, so the key only exists
+ * when the user muted. Absent or junk reads as on.
+ */
+export function readReadAloud(): boolean {
+  return storage()?.getItem(STORAGE_KEYS.readAloud) !== "0";
+}
+
+export function writeReadAloud(on: boolean): void {
+  if (on) storage()?.removeItem(STORAGE_KEYS.readAloud);
+  else storage()?.setItem(STORAGE_KEYS.readAloud, "0");
+}
+
 const STATES = new Set<OnboardState>(["assam", "maharashtra", "karnataka", "other"]);
 
 export function readState(): OnboardState | null {

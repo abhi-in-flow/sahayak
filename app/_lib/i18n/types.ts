@@ -91,6 +91,23 @@ export interface BaseStrings {
   "chrome.tab.journey": string;
   "chrome.tab.help": string;
 
+  /* ---- VoiceRail (voice corridor chrome, S2-S5) ---------------------- */
+  "rail.micIdle": string;
+  "rail.micTapStop": string;
+  "rail.micHoldStop": string;
+  "rail.cancel": string;
+  "rail.listening": string;
+  "rail.transcribing": string;
+  "rail.thinking": string;
+  "rail.speaking": string;
+  "rail.listenAgain": string;
+  "rail.typeToggle": string;
+  "rail.readAloud": string;
+  "rail.step.speak": string;
+  "rail.step.clarify": string;
+  "rail.step.confirm": string;
+  "rail.step.plan": string;
+
   "onboard.title": string;
   "onboard.lang": string;
   "onboard.state": string;

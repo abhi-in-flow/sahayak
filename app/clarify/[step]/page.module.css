@@ -1,7 +1,9 @@
-/* S3 route shell (D3 S3). The island owns the card layout. */
+/* S3 route shell (D3 S3). The island owns the card layout.
+   The bottom padding reserves the VoiceRail's fixed zone (rail + TabBar
+   + safe area, ~200px; 240px clears the rail plus its transient caption strip) */
 
 .main {
   display: flex;
   flex-direction: column;
-  padding: var(--sp-4) 0 var(--sp-5);
+  padding: var(--sp-4) 0 calc(240px + env(safe-area-inset-bottom));
 }

@@ -240,6 +240,18 @@ The budget is deliberately near-zero (DP-5). Four animations exist in the entire
 
 Everything else is a state change with no transition. No parallax, no scroll-triggered reveals, no entrance animation, no hover physics, no marquees, no infinite loops other than M-3.
 
+### The V-tier: voice-state motion (the one sanctioned extension)
+
+The VoiceRail (D10 §10.9, voice corridor) needs motion that the M-budget cannot express, because for voice the loop **is the information**: a waveform that has stopped moving is how a live mic reads as "still recording", and a frozen bar is how a playing reply reads as "stuck". Three additional animations exist, all confined to the rail and its caption strip, and every one marks a state that is **also carried in words** by the rail label and the live regions (A6), so no information is motion-only:
+
+| # | Animation | Question it answers | Duration | Reduced-motion equivalent |
+|---|---|---|---|---|
+| V-1 | Rail waveform (S2/S3/S4/S5 rail) | "Is it hearing me right now?" | Real-time, driven by the measured mic level — never a timed loop | Static mid-level bar; the state label carries "listening" |
+| V-2 | Rail breath/glow (listening and speaking only) | "Is the mic live? Is it talking?" | 2 s opacity/shadow loop (`--dur-breath`) | Static accent border + glow colour, no pulse |
+| V-3 | Caption strip fade | "Are these the words it heard?" | 150 ms fade (`--dur-caption`) | Instant swap |
+
+V-2 is the deliberate exception to "no infinite loops other than M-3", and it is bounded twice: only while a voice state is active (it never decorates an idle screen), and only on the rail. Interim captions fade in via V-3; the frozen intermediate text stays visible through the "writing it down" state so the user can verify what will be sent. As with M-1 through M-4: `transform` and `opacity` only, and `prefers-reduced-motion` collapses V-1/V-2 to their static equivalents while the words carry the state.
+
 ### M-1 is spec-mandated, so its fallback is specified
 
 S5's Default state requires that completion "promotes the next task with an explicit visible transition (unlock animation) so causality is seen". Under `prefers-reduced-motion: reduce` the animation must not simply be deleted, because that would remove a behaviour D3 requires. The causality is instead carried by three non-motion channels that already exist in the specs and fire regardless of motion preference:
@@ -306,6 +318,7 @@ The recurring components across S1 to S11, with their token bindings. Each is sp
 | Error summary | S8 | Top of step, `--err-100` / `--err-700`, `role="alert"`, field names as in-page links (D6 §6.2) |
 | Bottom sheet | SH1, confirms | `--surface`, radius 12 top corners, scrim `--ink-900` at 55%, focus trapped (D6 §6.1) |
 | Progress ring | S5, S9 | `--accent-700` on `--line-300`. Always accompanied by the literal "{done} of {n} done"; the ring alone is decorative (DP-4) |
+| VoiceRail | S2, S3, S4, S5 | Fixed dock above the TabBar, 480 px cap, `--page` field with 1 px `--line-300` top edge. Pill: `--surface`, radius 8, min-height 64, 1 px `--line-600`; live states (listening, speaking) add the `--accent-700` border and the V-2 glow. Ghost caption strip above the pill in `--ink-500`. Corridor step segments in `meta` under the pill: filled dot = done, ring dot + bold = current (with live detail like "3 of 5"), grey dot = upcoming; `aria-hidden`, because the page's own words carry the same state. Motion per §10.7 V-tier; mic gesture per D3 S2 (P2-4). Read-aloud toggle: one icon button (`Volume2`/`VolumeX`) hoisted at pill level in every phase — a durable preference enforced in `speak()` (docs/voice-corridor.md) |
 | Skeleton | S2, S4, S5, S6, S7, S8, S9 | `--sunken` blocks in the shape of the real content, `aria-busy="true"` (D6 §6.2). Never a spinner |
 | Offline chip (O-01) | Global | `--warn-100` / `--warn-800`, cloud-off icon |
 | Interstitial (N6) | S6 | Full sheet before every external navigation |

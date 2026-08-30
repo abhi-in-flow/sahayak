@@ -4,8 +4,8 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import { useRouter } from "next/navigation";
 import { BottomSheet } from "@/app/_components/BottomSheet";
 import { InlineNote } from "@/app/_components/InlineNote";
-import { MicButton } from "@/app/_components/MicButton";
 import { RetryCard } from "@/app/_components/RetryCard";
+import { VoiceRail, type VoiceRailStrings } from "@/app/_components/VoiceRail";
 import { announce } from "@/app/_lib/announce";
 import {
   decideExit,
@@ -17,6 +17,7 @@ import {
 import { withLocale } from "@/app/_lib/nav";
 import { SpeechCapture } from "@/app/_lib/speech";
 import { speak, stopSpeaking } from "@/app/_lib/speak";
+import { isMuted, setMuted } from "@/app/_lib/voice/mute";
 import { matchUtterance } from "@/app/_lib/socratic/voiceMatch";
 import {
   getJourneyServerSnapshot,
@@ -24,6 +25,12 @@ import {
   subscribeJourney,
   updateJourney,
 } from "@/app/_lib/journey/store";
+import {
+  getVoiceSnapshot,
+  setVoiceInterim,
+  setVoicePhase,
+  setVoiceStep,
+} from "@/app/_lib/voice/store";
 import styles from "./ClarifyLoop.module.css";
 
 /**
@@ -69,7 +76,14 @@ export interface ClarifyLoopProps {
   micOfflineReason: string;
   /** D5 E-01 verbatim, for a failed read-aloud attempt. */
   audioError: string;
-  micLabels: { idle: string; tapStop: string; holdStop: string };
+  /** Resolved rail chrome (voiceRailStrings on the server page, with this
+   *  screen's "Answer with your voice" as the idle label). */
+  railStrings: VoiceRailStrings;
+  /** Corridor segment detail beside "Clarify", e.g. "3 of 5". */
+  corridorDetail: string;
+  /** Heard echo chip templates: {text} utterance, {answer} matched label. */
+  echoHeard: string;
+  echoAnswer: string;
   didYouMean: string;
   e09Message: string;
   e03Message: string;
@@ -162,7 +176,10 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
     backLabel,
     micOfflineReason,
     audioError,
-    micLabels,
+    railStrings,
+    corridorDetail,
+    echoHeard,
+    echoAnswer,
     didYouMean,
     e09Message,
     e03Message,
@@ -199,17 +216,27 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
   const [draftEdit, setDraftEdit] = useState<string[] | null>(null);
   const [pending, setPending] = useState(false);
   const [failures, setFailures] = useState(0);
-  const [listening, setListening] = useState(false);
   const [promptVisible, setPromptVisible] = useState(false);
   const [micLocked, setMicLocked] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [audioErrorCount, setAudioErrorCount] = useState(0);
+  /** M-2 heard echo: the matched utterance shown ~600 ms before the
+     loop advances. Null hides the chip. */
+  const [echo, setEcho] = useState<{ utterance: string; answer: string } | null>(null);
 
   const captureRef = useRef<SpeechCapture | null>(null);
   /* Recognition callbacks are registered once per capture session and
-     keep their first closure, so the ambiguity count lives in a ref:
-     state would read stale (always 0) on the second utterance. */
+     keep their first closure, so mutable per-session values live in
+     refs: state would read stale (always 0 / always false) on the
+     second utterance. */
   const ambiguitiesRef = useRef(0);
+  /** Whether the recognition pipe is live, readable from the callbacks'
+     first closures (state would always read false there). */
+  const listeningRef = useRef(false);
+  /** Mirrors `pending` for the deferred echo advance (a tap answer or a
+     Back press during the 600 ms window must not double-record). */
+  const pendingRef = useRef(false);
+  const echoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* Guard: this route without a captured problem goes back to /capture.
      Read the authoritative snapshot, not the hydration-time value. */
@@ -221,14 +248,40 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
   }, [localeCode, router]);
 
   /* Leaving the question (route change or unmount) never leaks a live
-     recognition pipe or a speaking voice. */
+     recognition pipe, a speaking voice, or a pending echo advance, and
+     it resets the corridor furniture this screen wrote. */
   useEffect(
     () => () => {
       captureRef.current?.abort();
       stopSpeaking();
+      if (echoTimerRef.current !== null) clearTimeout(echoTimerRef.current);
+      setVoiceInterim("");
+      setVoicePhase("idle");
+      setVoiceStep(null);
     },
     [],
   );
+
+  /* Corridor position: "Clarify · {n} of 5" for as long as this question
+     is on screen (the prototype's frame 4). */
+  useEffect(() => {
+    setVoiceStep({ id: "clarify", detail: corridorDetail });
+  }, [corridorDetail]);
+
+  /* The question is spoken once it can render (A5 read-aloud, primary
+     channel on the voice corridor; the speaker button replays it). The
+     promise settles only after playback, and the unmount effect has
+     already stopped the voice, so nothing else is needed on the way out. */
+  useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
+    void speak(questionText, localeCode).then((ok) => {
+      if (!cancelled && !ok) setAudioErrorCount((count) => count + 1); // E-01 path
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [ready, questionText, localeCode]);
 
   const recorded = ready ? recordedValue(record!.answers, questionId) : undefined;
 
@@ -252,7 +305,8 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
    *  ids, or the literal "unknown"; multi-select pushes one answer per
    *  selected value (D3 S3 / D4 schema). */
   function recordAnswer(values: string[], spokenLabel: string) {
-    if (pending || !ready) return;
+    if (pendingRef.current || !ready) return;
+    pendingRef.current = true;
     setPending(true);
     announce(spokenLabel);
     if (multiSelect) {
@@ -292,6 +346,8 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
   /** E-03 "Try again": the answer is already persisted; recompute the
    *  transition from the record. Never records twice. */
   function retryTransition() {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     setPending(true);
     try {
       const current = getJourneySnapshot();
@@ -335,31 +391,57 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
     recordAnswer(current, labels.join(", "));
   }
 
-  /* ---- voice answer (D3 S3: present on every question) ---------------- */
+  /* ---- voice answer (D3 S3: present on every question) ----------------
+     The rail below IS the mic affordance (one per screen); capture stays
+     the local SpeechCapture flow with its E-09 ambiguity lock. Phases:
+     start -> "listening", stop press -> "transcribing" while the engine
+     flushes its final, match resolved -> "idle" (the match is local and
+     instant, so no "thinking" phase is faked here). */
+
+  /** Close the pipe and land the rail back on idle, clearing the ghost
+     caption. Used by the error/end paths where no final text arrives. */
+  function settleIdle() {
+    listeningRef.current = false;
+    setVoiceInterim("");
+    const phase = getVoiceSnapshot().phase;
+    if (phase === "listening" || phase === "transcribing") setVoicePhase("idle");
+  }
 
   function startVoice() {
     stopSpeaking();
+    setVoiceInterim("");
     const capture = new SpeechCapture();
     captureRef.current = capture;
     capture.start(localeCode, {
-      onPartial: () => {
-        // No live transcript surface on S3; the options and the mic
-        // state carry the feedback.
+      onPartial: (text) => {
+        // Ghost caption on the rail: the live words, verbatim (V-3).
+        setVoiceInterim(text);
       },
       onFinal: handleUtterance,
       onError: () => {
         // D5 has no S3 voice-capture code (E-02/E-04/E-05 belong to S2).
         // A failed attempt just ends listening; tap answers remain.
-        setListening(false);
+        settleIdle();
       },
-      onEnd: () => setListening(false),
+      onEnd: () => settleIdle(),
     });
-    setListening(true);
+    listeningRef.current = true;
+    setVoicePhase("listening");
   }
 
   function stopVoice() {
     captureRef.current?.stop();
-    setListening(false);
+    listeningRef.current = false;
+    // The interim stays visible through "writing it down" so the user
+    // can verify what will be matched (store.ts flow).
+    setVoicePhase("transcribing");
+  }
+
+  function cancelVoice() {
+    captureRef.current?.abort();
+    listeningRef.current = false;
+    setVoiceInterim("");
+    setVoicePhase("idle");
   }
 
   function handleUtterance(text: string) {
@@ -371,25 +453,48 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
     const result = matchUtterance(text, matchOptions);
     if (result.kind === "match") {
       captureRef.current?.stop();
-      setListening(false);
-      recordAnswer([result.id], result.id === "unknown" ? notSureLabel : labelOf(result.id));
+      listeningRef.current = false;
+      setVoiceInterim("");
+      setVoicePhase("idle");
+      // The proof step (M-2 territory): show what was heard and the
+      // answer it resolved to for a beat, then follow the machine.
+      const label = result.id === "unknown" ? notSureLabel : labelOf(result.id);
+      if (echoTimerRef.current !== null) clearTimeout(echoTimerRef.current);
+      setEcho({ utterance: text, answer: label });
+      echoTimerRef.current = setTimeout(() => {
+        echoTimerRef.current = null;
+        setEcho(null);
+        recordAnswer([result.id], label);
+      }, 600);
       return;
     }
     // Ambiguous or unmatched. First time: the one "Did you mean..."
     // re-render, mic still open so a clearer restatement can record.
-    // Second time: E-09, tap-only for THIS question (D5 5.1); the mic
+    // Second time: E-09, tap-only for THIS question (D5 5.1); the rail
     // returns on the next question because this island remounts.
     ambiguitiesRef.current += 1;
     if (ambiguitiesRef.current >= 2) {
       captureRef.current?.abort();
-      setListening(false);
+      listeningRef.current = false;
+      setVoiceInterim("");
+      setVoicePhase("idle");
       setMicLocked(true);
     } else {
+      if (!listeningRef.current) {
+        // Pipe already closed (stop pressed): land on idle, nothing to hear.
+        setVoicePhase("idle");
+      }
+      setVoiceInterim("");
       setPromptVisible(true);
     }
   }
 
   async function replayQuestion() {
+    // An explicit "hear this" tap flips the durable preference: speak()
+    // stays the only mute enforcement point (no force param). Unmuting
+    // alone would not re-speak - the auto-speak effect keys on question
+    // identity, not mute state.
+    if (isMuted()) setMuted(false);
     const ok = await speak(questionText, localeCode);
     if (!ok) setAudioErrorCount((c) => c + 1); // E-01 path: note, control stays.
   }
@@ -584,20 +689,31 @@ export function ClarifyLoop(props: ClarifyLoopProps) {
           </>
         )}
 
-        {speechSupported && (
-          <div className={styles.micRow}>
-            <MicButton
-              listening={listening}
-              disabled={micDisabled}
-              disabledReason={!online ? micOfflineReason : undefined}
-              labels={micLabels}
-              onGestureMode={() => {}}
-              onStart={startVoice}
-              onStop={stopVoice}
-            />
-          </div>
-        )}
       </section>
+
+      {/* Heard echo (M-2 territory): fixed above the rail, ~600 ms, then
+          the loop advances. role="status" announces it; the global live
+          regions stay reserved for the record confirmation. */}
+      {echo && (
+        <div className={styles.echoChip} role="status">
+          <span className={styles.echoHeard}>{echoHeard.replace("{text}", echo.utterance)}</span>
+          <span className={styles.echoAnswer}>{echoAnswer.replace("{answer}", echo.answer)}</span>
+        </div>
+      )}
+
+      {/* The corridor rail: this screen's one mic affordance (the old
+          per-question MicButton row is gone). Fixed above the TabBar by
+          its own styles; the scroll content reserves ~200px for it. */}
+      {speechSupported && (
+        <VoiceRail
+          strings={railStrings}
+          onStart={startVoice}
+          onStop={stopVoice}
+          onCancel={cancelVoice}
+          disabled={micDisabled}
+          disabledReason={!online ? micOfflineReason : micLocked ? e09Message : undefined}
+        />
+      )}
 
       {absentOption && (
         <BottomSheet

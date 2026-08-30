@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useRef, useState, type MouseEvent, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Volume2 } from "lucide-react";
 import type { LocaleDefinition, Strings } from "@/app/_lib/i18n";
 import { DEFAULT_LOCALE, findLocale, t } from "@/app/_lib/i18n";
 import { DisclosureBanner, GlobalFooter, SkipLink } from "@/app/_components/Chrome";
@@ -10,16 +11,29 @@ import { InlineNote } from "@/app/_components/InlineNote";
 import { StatusChip, type TaskStatus } from "@/app/_components/StatusChip";
 import { ProgressRing } from "@/app/_components/ProgressRing";
 import { SaveSheet } from "@/app/_components/SaveSheet/SaveSheet";
+import { VoiceRail } from "@/app/_components/VoiceRail";
 import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
+import { speak, stopSpeaking } from "@/app/_lib/speak";
+import { isMuted, setMuted } from "@/app/_lib/voice/mute";
 import { computeGraph, mergeGraphs } from "@/app/_lib/journey/compute";
 import type { TaskState } from "@/app/_lib/storage/schema";
 import { clearJourney, mutate, readJourney, readLocale } from "@/app/_lib/storage/local";
+import { setVoicePhase, setVoiceStep } from "@/app/_lib/voice/store";
+import { voiceRailStrings } from "@/app/_lib/voice/strings";
 import { TASKS, type TaskDefinition } from "@/app/_lib/tasks";
 import styles from "./page.module.css";
 
 /**
  * S5 — Journey Map. D3 S5; D4 §4.4; D11 §3 (banner family).
+ *
+ * The plan artifact is voiced with checklist vocabulary (the Cleo/CVS
+ * pattern): done cards recede behind a filled check, the single
+ * "Do first" card is elevated and numbered, upcoming cards are greyed
+ * with their order number. StatusChip and the literal "n of n done"
+ * count stay the accessible carriers (A6; DP-4). The VoiceRail mounts
+ * as the corridor's plan step; its mic hands off to the capture agent
+ * flow ("ask a follow-up") and the header control reads the plan aloud.
  *
  * The graph is recomputed fresh from the recorded answers and merged
  * into the stored one on every entry, so statuses, ack numbers and
@@ -114,8 +128,11 @@ function JourneyScreen() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [locked, setLocked] = useState(false);
   const [showE21, setShowE21] = useState(params.get("notice") === "e21");
+  const [audioNote, setAudioNote] = useState(false);
   const online = useSyncExternalStore(subscribeOnline, getOnline, getOnlineServer);
   const announcedDiff = useRef(false);
+  /** True while this screen is mounted; guards the async speak() tail. */
+  const alive = useRef(false);
 
   /* T-LOCAL exists only after mount, so the journey read, the P5 merge
      and their resulting state must live in an effect; each branch
@@ -197,6 +214,20 @@ function JourneyScreen() {
   }, [params, router]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
+  /* The rail's position on the corridor: this is the plan step. Tearing
+     it down on unmount matters because the voice store outlives the
+     screen, and a mid-read-aloud exit must leave neither a stale
+     segment nor a phase stuck on "speaking" for the next screen. */
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+      setVoiceStep(null);
+      setVoicePhase("idle");
+      stopSpeaking();
+    };
+  }, []);
+
   const dismissDiff = () => {
     if (!view) return;
     const key = view.diffKey;
@@ -268,7 +299,62 @@ function JourneyScreen() {
   const talkHref = withLocale("/capture", locale.code);
   const backHref = view?.agent ? talkHref : view?.manual ? unresolvedHref : confirmHref;
 
-  const renderTaskCard = (task: TaskState, isDoFirst: boolean) => {
+  // Checklist order numbers (the Cleo/CVS vocabulary): the Do-first card
+  // is 1 and every further open task follows; done cards wear the check
+  // instead. Visual only: the chips and the header count stay the
+  // accessible carriers (DP-4; A6).
+  const stepNumbers = new Map<string, number>();
+  let nextStep = 0;
+  for (const task of activeTasks) {
+    if (task.status !== "done") stepNumbers.set(task.code, ++nextStep);
+  }
+
+  // The rail's "plan" segment shows the ring's own numbers, so segment
+  // and header never disagree; it recomputes when a merge changes them
+  // (setVoiceStep dedupes identical id+detail writes).
+  const planDetail =
+    view && activeTasks.length > 0
+      ? t(locale, "s5.railDetail", { done: doneCount, n: activeTasks.length })
+      : null;
+
+  useEffect(() => {
+    if (!planDetail) {
+      setVoiceStep(null);
+      return;
+    }
+    setVoiceStep({ id: "plan", detail: planDetail });
+  }, [planDetail]);
+
+  /* Read the checklist aloud; playback drives the rail's speaking state
+     and "Listen again" on it re-triggers this. A false return is the
+     E-01 path: inline note, control stays functional (D5 §5.1). */
+  const listenToPlan = async () => {
+    if (!view) return;
+    // An explicit "read this" tap flips the durable preference: speak()
+    // stays the only mute enforcement point (no force param).
+    if (isMuted()) setMuted(false);
+    setVoicePhase("speaking");
+    const ok = await speak(checklistText(), locale.code);
+    if (!alive.current) return;
+    setVoicePhase("idle");
+    if (!ok) setAudioNote(true);
+  };
+
+  /* On the plan the rail's mic means "ask a follow-up": the agent flow
+     in /capture owns the conversation, so hand off with listen=1
+     (auto-listen) rather than capturing here. */
+  const askFollowUp = () => {
+    // D3: the first navigation tap wins.
+    if (locked) return;
+    setLocked(true);
+    router.push(withLocale("/capture?listen=1", locale.code));
+  };
+  // The screen never captures locally, so there is nothing to stop.
+  const stopFollowUp = () => {};
+
+  const railStrings = voiceRailStrings(locale);
+
+  const renderTaskCard = (task: TaskState, isDoFirst: boolean, index: number) => {
     const def: TaskDefinition | undefined = TASKS.find(
       (candidate) => candidate.code === task.code,
     );
@@ -278,9 +364,42 @@ function JourneyScreen() {
     const status = chipFor(task, view?.unknownDerived ?? new Set());
     const showChip = !(isDoFirst && status.kind === "doNow");
     const detail = !def && task.detail ? cardDetail(task.detail, name, sourceUrl) : "";
+    const isDone = task.status === "done";
+    const stepNumber = stepNumbers.get(task.code);
+    const stateClass = isDoFirst
+      ? styles.cardFirst
+      : isDone
+        ? styles.cardDone
+        : styles.cardUpcoming;
+    const dotClass = isDoFirst
+      ? styles.stepNow
+      : isDone
+        ? styles.stepDone
+        : styles.stepTodo;
+    // First-entry reveal only: stagger capped so the last card lands
+    // within the 400ms M-1 budget no matter how long the list is.
+    const revealDelay = `${Math.min(index * 80, 240)}ms`;
     return (
-      <li key={task.code}>
-        <article className={`${styles.card} ${isDoFirst ? styles.cardFirst : ""}`}>
+      <li key={task.code} className={styles.revealItem} style={{ animationDelay: revealDelay }}>
+        <article className={`${styles.card} ${stateClass}`}>
+          {/* Decorative checklist marker; chip + header count carry the
+              state in words and shape (A6; DP-4). */}
+          <span className={`${styles.stepDot} ${dotClass}`} aria-hidden="true">
+            {isDone ? (
+              <svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true">
+                <path
+                  d="M3.5 8.5l3 3 6-7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : (
+              stepNumber
+            )}
+          </span>
           {isDoFirst ? (
             <div className={styles.firstBand}>
               <span>{t(locale, "s5.doFirst")}</span>
@@ -416,6 +535,13 @@ function JourneyScreen() {
                 </InlineNote>
               ) : null}
 
+              {/* E-01 fallback for the read-aloud control (D5 §5.1). */}
+              {audioNote ? (
+                <InlineNote tone="warn" autoClearMs={4000} onCleared={() => setAudioNote(false)}>
+                  {t(locale, "error.E01")}
+                </InlineNote>
+              ) : null}
+
               <div className={styles.header}>
                 <div className={styles.headerText}>
                   <h1 className={styles.heading}>
@@ -426,6 +552,10 @@ function JourneyScreen() {
                   <p className={styles.progressText}>
                     {t(locale, "s5.progress", { done: doneCount, n: activeTasks.length })}
                   </p>
+                  <button type="button" className={styles.listenPlan} onClick={listenToPlan}>
+                    <Volume2 size={20} aria-hidden="true" />
+                    {t(locale, "s5.listenPlan")}
+                  </button>
                 </div>
                 {/* DP-4: the ring is decorative; the literal count above
                     always accompanies it. */}
@@ -448,7 +578,9 @@ function JourneyScreen() {
               <div className={styles.timeline}>
                 <span className={styles.rail} aria-hidden="true" />
                 <ol className={styles.list}>
-                  {activeTasks.map((task, index) => renderTaskCard(task, index === firstUndoneIndex))}
+                  {activeTasks.map((task, index) =>
+                    renderTaskCard(task, index === firstUndoneIndex, index),
+                  )}
                 </ol>
               </div>
 
@@ -516,6 +648,21 @@ function JourneyScreen() {
       {view ? (
         <SaveSheet open={sheetOpen} onClose={() => setSheetOpen(false)} locale={locale} />
       ) : null}
+
+      {/* The corridor rail, fixed above the TabBar. Its mic hands off to
+          the capture agent flow; onListenAgain replays the plan. */}
+      {view ? (
+        <VoiceRail
+          strings={railStrings}
+          onStart={askFollowUp}
+          onStop={stopFollowUp}
+          onListenAgain={listenToPlan}
+        />
+      ) : null}
+
+      {/* Clearance so the footer never scrolls behind the fixed rail
+          (the shell's own padding covers only the TabBar). */}
+      <div className={styles.railClearance} aria-hidden="true" />
     </>
   );
 }

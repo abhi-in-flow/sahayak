@@ -7,6 +7,7 @@ import type { LocaleDefinition, Strings } from "@/app/_lib/i18n";
 import { DEFAULT_LOCALE, findLocale, t } from "@/app/_lib/i18n";
 import { DisclosureBanner, GlobalFooter, SkipLink } from "@/app/_components/Chrome";
 import { InlineNote } from "@/app/_components/InlineNote";
+import { VoiceRail } from "@/app/_components/VoiceRail";
 import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
 import {
@@ -21,6 +22,9 @@ import type { RecordedAnswer } from "@/app/_lib/storage/schema";
 import { readJourney, readLocale } from "@/app/_lib/storage/local";
 import { TASKS } from "@/app/_lib/tasks";
 import { speak, stopSpeaking } from "@/app/_lib/speak";
+import { isMuted, setMuted } from "@/app/_lib/voice/mute";
+import { voiceRailStrings } from "@/app/_lib/voice/strings";
+import { setVoiceInterim, setVoicePhase, setVoiceStep } from "@/app/_lib/voice/store";
 import styles from "./page.module.css";
 
 /**
@@ -71,6 +75,16 @@ const ASSET_PHRASE: Record<string, StrKey> = {
   bank: "s4.asset.bank",
   house: "s4.asset.house",
   land: "s4.asset.land",
+};
+
+/** The S3 question text per engine id: the definition-list term above
+ *  each recorded answer (the engine is string-free; terms resolve here). */
+const QUESTION_TERM_KEYS: Record<QuestionId, StrKey> = {
+  registered: "s3.q.registered",
+  state: "s3.q.state",
+  work: "s3.q.work",
+  assets: "s3.q.assets",
+  relationship: "s3.q.relationship",
 };
 
 /**
@@ -191,6 +205,9 @@ type Loaded =
       taskCount: number;
       officeCount: number;
       updated: { was: number } | null;
+      /** Where the rail's mic sends a spoken correction, resolved from
+       *  the record's source mode (agent -> recapture, socratic -> Q1). */
+      correctionHref: string;
     };
 
 function ConfirmScreen() {
@@ -250,19 +267,64 @@ function ConfirmScreen() {
       // Session storage unavailable: only the delta pill is lost.
     }
 
-    setLoaded({ phase: "ready", summary, taskCount, officeCount, updated });
+    // The rail's mic here means "speak a correction", routed by the
+    // record's source mode exactly like the manual correction paths:
+    // an agent-built record goes back to recapture; a socratic one to Q1
+    // in return-to-S4 mode.
+    const correctionHref =
+      journey?.source === "agent"
+        ? withLocale("/capture?listen=1", effLocale.code)
+        : withLocale("/clarify/1?return=s4", effLocale.code);
+
+    setLoaded({ phase: "ready", summary, taskCount, officeCount, updated, correctionHref });
     if (updated) {
       announce(t(effLocale, "s4.updated.delta", { n: taskCount, p: updated.was }));
     }
 
-    // Auto-play is skipped on purpose: voice-mode detection is not
-    // available to this screen, and un-gestured synthesis is unreliable.
-    // The speaker control below carries read-aloud (A5) in both modes.
+    // Read-aloud itself is auto-spoken once "ready" (see the spoken-review
+    // effect below); only its failure surfaces here as the E-01 note.
   }, [params, router]);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  // Read-aloud must not outlive the screen.
-  useEffect(() => () => stopSpeaking(), []);
+  /* Corridor position for as long as this screen shows. */
+  useEffect(() => {
+    setVoiceStep({ id: "confirm" });
+  }, []);
+
+  // Read-aloud must not outlive the screen; neither may the rail state
+  // this screen wrote.
+  useEffect(
+    () => () => {
+      stopSpeaking();
+      setVoiceInterim("");
+      setVoicePhase("idle");
+      setVoiceStep(null);
+    },
+    [],
+  );
+
+  /* Spoken review, once per arrival: the summary is read aloud while the
+     rail carries the corridor's "Speaking" state, and nothing navigates
+     by itself. The speaker button replays it. The effect fires when the
+     ready state lands (locale settles in the same batch), so no extra
+     once-guard is needed; cleanup only cancels the state write, never
+     the unmount path's own stopSpeaking reset. */
+  const localeCode = locale.code;
+  useEffect(() => {
+    if (loaded.phase !== "ready") return;
+    setVoicePhase("speaking");
+    let cancelled = false;
+    void (async () => {
+      const ok = await speak(summaryRef.current, localeCode);
+      if (cancelled) return;
+      setVoicePhase("idle");
+      // E-01 path: inline note, auto-clears in 4s, control stays.
+      if (!ok) setAudioNote(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [loaded.phase, localeCode]);
 
   // D3 Disabled state: the first navigation tap wins; later taps (and
   // in-flight link activations) are ignored for the transition window.
@@ -276,12 +338,43 @@ function ConfirmScreen() {
     router.push(href);
   };
 
+  // The rail's idle label names this screen's job: a spoken correction,
+  // not a fresh capture. The chrome strings stay the shared rail ones.
+  const railStrings = {
+    ...voiceRailStrings(locale),
+    micIdle: t(locale, "s4.correction.micIdle"),
+  };
+
+  // Rail mic = "speak a correction": route by the record's source mode
+  // (resolved at load into correctionHref). No capture flow lives here.
+  const startCorrection = () => {
+    if (loaded.phase !== "ready") return;
+    go(loaded.correctionHref);
+  };
+
   const replay = async () => {
     if (loaded.phase !== "ready") return;
+    // An explicit "hear this" tap flips the durable preference: speak()
+    // stays the only mute enforcement point (no force param).
+    if (isMuted()) setMuted(false);
+    // The rail mirrors read-aloud as the corridor's speaking state.
+    setVoicePhase("speaking");
     const ok = await speak(summaryRef.current, locale.code);
+    setVoicePhase("idle");
     // E-01 path: inline note, auto-clears in 4s, control stays functional.
     if (!ok) setAudioNote(true);
   };
+
+  // buildSummary pushes chips in question order, so grouping per question
+  // keeps D3 S4's order; each group is one definition-list row.
+  const reviewRows: { question: QuestionId; chips: SummaryChip[] }[] = [];
+  if (loaded.phase === "ready") {
+    for (const chip of loaded.summary.chips) {
+      const last = reviewRows[reviewRows.length - 1];
+      if (last && last.question === chip.question) last.chips.push(chip);
+      else reviewRows.push({ question: chip.question, chips: [chip] });
+    }
+  }
 
   return (
     <>
@@ -325,10 +418,13 @@ function ConfirmScreen() {
               ) : null}
 
               {/* D11 §2: the S4 summary card is one of the two surfaces
-                  where elevation is real and a shadow is allowed. */}
+                  where elevation is real and a shadow is allowed. Each
+                  recorded question renders as a term (the question) and
+                  its definition (the answer chips, which stay the
+                  correction path). */}
               <section className={styles.summaryCard}>
                 <div className={styles.summaryHead}>
-                  <p className={styles.summaryText}>{loaded.summary.text}</p>
+                  <p className={styles.summaryIntro}>{t(locale, "s4.review.intro")}</p>
                   <button
                     type="button"
                     className={styles.speak}
@@ -352,6 +448,52 @@ function ConfirmScreen() {
                     </svg>
                   </button>
                 </div>
+
+                <dl className={styles.reviewList}>
+                  {reviewRows.map((row) => {
+                    const order = questionById(row.question).order;
+                    return (
+                      <div key={row.question} className={styles.reviewRow}>
+                        <dt className={styles.reviewTerm}>
+                          {t(locale, QUESTION_TERM_KEYS[row.question])}
+                        </dt>
+                        <dd className={styles.reviewDef}>
+                          {row.chips.map((chip, index) => {
+                            return (
+                              <Link
+                                key={`${chip.question}-${index}`}
+                                href={withLocale(`/clarify/${order}?return=s4`, locale.code)}
+                                className={
+                                  chip.unsure ? `${styles.chip} ${styles.chipUnsure}` : styles.chip
+                                }
+                                onClick={guardClick}
+                              >
+                                <span className={styles.chipLabel}>
+                                  {chip.label}
+                                  <svg className={styles.pencil} viewBox="0 0 16 16" aria-hidden="true">
+                                    <path
+                                      d="M11.1 2.6l2.3 2.3L5.2 13.1l-3.1.8.8-3.1z"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      strokeWidth="1.5"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </span>
+                                {chip.unsure ? (
+                                  <span className={styles.chipCaption}>
+                                    {t(locale, "s4.chip.unsure.caption")}
+                                  </span>
+                                ) : null}
+                                <span className="sr-only">{t(locale, "s4.chip.change")}</span>
+                              </Link>
+                            );
+                          })}
+                        </dd>
+                      </div>
+                    );
+                  })}
+                </dl>
               </section>
 
               {audioNote ? (
@@ -360,43 +502,14 @@ function ConfirmScreen() {
                 </InlineNote>
               ) : null}
 
-              <div className={styles.chipRow}>
-                {loaded.summary.chips.map((chip, index) => {
-                  const order = questionById(chip.question).order;
-                  return (
-                    <Link
-                      key={`${chip.question}-${index}`}
-                      href={withLocale(`/clarify/${order}?return=s4`, locale.code)}
-                      className={chip.unsure ? `${styles.chip} ${styles.chipUnsure}` : styles.chip}
-                      onClick={guardClick}
-                    >
-                      <span className={styles.chipLabel}>
-                        {chip.label}
-                        <svg className={styles.pencil} viewBox="0 0 16 16" aria-hidden="true">
-                          <path
-                            d="M11.1 2.6l2.3 2.3L5.2 13.1l-3.1.8.8-3.1z"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      </span>
-                      {chip.unsure ? (
-                        <span className={styles.chipCaption}>
-                          {t(locale, "s4.chip.unsure.caption")}
-                        </span>
-                      ) : null}
-                      <span className="sr-only">{t(locale, "s4.chip.change")}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-
               <p className={styles.consequence}>
                 {loaded.taskCount === 1
-                  ? t(locale, "s4.consequenceOne", { m: loaded.officeCount })
-                  : t(locale, "s4.consequence", { n: loaded.taskCount, m: loaded.officeCount })}
+                  ? loaded.officeCount === 1
+                    ? t(locale, "s4.consequence.oneOne")
+                    : t(locale, "s4.consequenceOne", { m: loaded.officeCount })
+                  : loaded.officeCount === 1
+                    ? t(locale, "s4.consequence.m1", { n: loaded.taskCount })
+                    : t(locale, "s4.consequence", { n: loaded.taskCount, m: loaded.officeCount })}
               </p>
 
               {loaded.updated ? (
@@ -431,6 +544,16 @@ function ConfirmScreen() {
                   {t(locale, "s4.cta.wrong")}
                 </button>
               </div>
+
+              {/* The corridor rail. Its mic here means "speak a
+                  correction", routed by the record's source mode; while
+                  the summary is read the rail itself carries Speaking. */}
+              <VoiceRail
+                strings={railStrings}
+                onStart={startCorrection}
+                onStop={() => {}}
+                onListenAgain={replay}
+              />
             </>
           )}
         </main>
