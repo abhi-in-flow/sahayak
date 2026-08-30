@@ -46,6 +46,7 @@ const OPTION_KEYS: Record<QuestionId, Record<string, keyof S3Strings>> = {
   state: {
     assam: "s3.opt.state.assam",
     maharashtra: "s3.opt.state.maharashtra",
+    karnataka: "s3.opt.state.karnataka",
   },
   work: {
     company: "s3.opt.work.company",

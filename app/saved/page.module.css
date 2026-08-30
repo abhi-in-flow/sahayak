@@ -172,8 +172,10 @@
 .cardBody {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: var(--sp-2);
+  width: 100%;
+  min-width: 0;
 }
 
 /* Stretched-link pattern: the card routes to S6, the provenance link
@@ -181,6 +183,8 @@
 .cardLink {
   color: var(--ink-900);
   text-decoration: none;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .cardLink::after {
@@ -200,8 +204,12 @@
 }
 
 .taskName {
+  display: block;
+  width: 100%;
+  min-width: 0;
   font-size: var(--size-body-lg);
   font-weight: 600;
+  overflow-wrap: anywhere;
 }
 
 .department {

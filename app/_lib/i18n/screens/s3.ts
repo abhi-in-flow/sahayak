@@ -57,6 +57,7 @@ export interface S3Strings {
   "s3.opt.registered.no": string;
   "s3.opt.state.assam": string;
   "s3.opt.state.maharashtra": string;
+  "s3.opt.state.karnataka": string;
   /** Q2's honesty exit; opens the coverage sheet (not an answer). */
   "s3.opt.state.absent": string;
   "s3.opt.work.company": string;
@@ -126,6 +127,7 @@ export const enS3: S3Strings = {
   "s3.opt.registered.no": "No",
   "s3.opt.state.assam": "Assam",
   "s3.opt.state.maharashtra": "Maharashtra",
+  "s3.opt.state.karnataka": "Karnataka",
   "s3.opt.state.absent": "My state isn't here",
   "s3.opt.work.company": "Worked at a company",
   "s3.opt.work.retired": "Was retired",
@@ -196,6 +198,7 @@ export const hiS3: S3Strings = {
   "s3.opt.registered.no": "नहीं",
   "s3.opt.state.assam": "असम",
   "s3.opt.state.maharashtra": "महाराष्ट्र",
+  "s3.opt.state.karnataka": "कर्नाटक",
   "s3.opt.state.absent": "मेरा राज्य यहाँ नहीं है",
   "s3.opt.work.company": "कंपनी में काम करते थे",
   "s3.opt.work.retired": "सेवानिवृत्त थे",

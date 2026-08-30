@@ -15,6 +15,7 @@ html {
   /* Never set a px font-size on html: it breaks the user's browser text
      size and A2's 200% scaling requirement. */
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -35,7 +36,9 @@ h3,
 p,
 li,
 button,
-label {
+label,
+a,
+span {
   overflow-wrap: break-word;
 }
 
@@ -65,6 +68,11 @@ p {
   outline: var(--focus-ring-width) solid var(--focus-ring);
   outline-offset: var(--focus-offset);
   border-radius: var(--radius-control);
+}
+
+/* iOS paints a default outline on tap. Keep the ring for keyboard only. */
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 /* Motion budget is near-zero by design (D10 10.7). Anything that does
@@ -104,6 +112,7 @@ p {
 
 .pressable {
   transition: transform 0.05s ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Skeleton loading blocks (D10 10.9): shape of the real content, never
@@ -149,5 +158,5 @@ p {
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding: 0 var(--sp-4);
+  padding: 0 var(--sp-4) calc(72px + env(safe-area-inset-bottom));
 }

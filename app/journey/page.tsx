@@ -14,7 +14,7 @@ import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
 import { computeGraph, mergeGraphs } from "@/app/_lib/journey/compute";
 import type { TaskState } from "@/app/_lib/storage/schema";
-import { mutate, readJourney, readLocale } from "@/app/_lib/storage/local";
+import { clearJourney, mutate, readJourney, readLocale } from "@/app/_lib/storage/local";
 import { TASKS, type TaskDefinition } from "@/app/_lib/tasks";
 import styles from "./page.module.css";
 
@@ -68,8 +68,9 @@ function chipFor(task: TaskState, unknownDerived: ReadonlySet<string>): TaskStat
   }
 }
 
-function taskName(code: string): string {
-  return TASKS.find((def) => def.code === code)?.name ?? code;
+function taskName(task: Pick<TaskState, "code" | "title">): string {
+  if (task.title) return task.title;
+  return TASKS.find((def) => def.code === task.code)?.name ?? task.code;
 }
 
 /** Cause of an "+ added" diff line. T1 exists because of Q1's answer. */
@@ -85,6 +86,15 @@ function hostOf(url: string): string {
   }
 }
 
+/** Drop raw URLs from card copy; the official button already carries the link. */
+function cardDetail(detail: string, title: string, url?: string): string {
+  let text = detail;
+  if (url) text = text.split(url).join(" ");
+  text = text.replace(/https?:\/\/\S+/gi, " ").replace(/\s+/g, " ").trim();
+  if (!text || text.toLowerCase() === title.toLowerCase()) return "";
+  return text;
+}
+
 interface JourneyView {
   tasks: TaskState[];
   unknownDerived: ReadonlySet<string>;
@@ -92,6 +102,7 @@ interface JourneyView {
   /** Dismissal key in T-LOCAL, keyed by the merge's timestamp. */
   diffKey: string;
   manual: boolean;
+  agent: boolean;
 }
 
 function JourneyScreen() {
@@ -130,6 +141,22 @@ function JourneyScreen() {
     const manual = Boolean(
       paramSource?.startsWith("manual:") || record.source?.startsWith("manual:"),
     );
+    const agent = record.source === "agent";
+
+    // Agent journeys already have concrete steps from the snapshot.
+    // Merging the T1 Socratic graph would wipe them.
+    if (agent) {
+      setView({
+        tasks: record.tasks,
+        unknownDerived: new Set(),
+        diff: null,
+        diffKey: "diff:agent",
+        manual: false,
+        agent: true,
+      });
+      setPhase("ready");
+      return;
+    }
 
     // P5 recompute: fresh graph from the answers, merged into the stored
     // tasks. Manual-mode note: BUG-009 means no bundled B-definitions
@@ -157,6 +184,7 @@ function JourneyScreen() {
       diff: showDiff ? diff : null,
       diffKey,
       manual,
+      agent: false,
     });
     setPhase("ready");
 
@@ -193,9 +221,25 @@ function JourneyScreen() {
       .filter((task) => !task.archived)
       .forEach((task, index) => {
         const done = task.status === "done" ? ` (${t(locale, "status.done")})` : "";
-        lines.push(`${index + 1}. ${taskName(task.code)}${done}`);
+        lines.push(`${index + 1}. ${taskName(task)}${done}`);
       });
     return lines.join("\n");
+  };
+
+  const removeTask = (code: string) => {
+    if (!view) return;
+    if (!window.confirm(t(locale, "s5.removeConfirm"))) return;
+    const remaining = view.tasks.filter((task) => task.code !== code);
+    const stillActive = remaining.some((task) => !task.archived);
+    if (!stillActive) {
+      clearJourney();
+      router.replace(withLocale("/", locale.code));
+      return;
+    }
+    mutate((draft) => {
+      draft.tasks = draft.tasks.filter((task) => task.code !== code);
+    });
+    setView({ ...view, tasks: remaining });
   };
 
   // Share of a plain-text checklist; window.print is the E-22 behaviour
@@ -221,30 +265,56 @@ function JourneyScreen() {
   const archivedTasks = view ? view.tasks.filter((task) => task.archived) : [];
   const confirmHref = withLocale("/confirm", locale.code);
   const unresolvedHref = withLocale("/clarify/unresolved", locale.code);
-  const backHref = view?.manual ? unresolvedHref : confirmHref;
+  const talkHref = withLocale("/capture", locale.code);
+  const backHref = view?.agent ? talkHref : view?.manual ? unresolvedHref : confirmHref;
 
   const renderTaskCard = (task: TaskState, isDoFirst: boolean) => {
     const def: TaskDefinition | undefined = TASKS.find(
       (candidate) => candidate.code === task.code,
     );
+    const name = taskName(task);
+    const sourceUrl = def?.sourceUrl ?? task.url;
+    const practiceHref = def ? withLocale(`/task/${task.code}`, locale.code) : null;
+    const status = chipFor(task, view?.unknownDerived ?? new Set());
+    const showChip = !(isDoFirst && status.kind === "doNow");
+    const detail = !def && task.detail ? cardDetail(task.detail, name, sourceUrl) : "";
     return (
       <li key={task.code}>
-        <article className={`${styles.card} pressable ${isDoFirst ? styles.cardFirst : ""}`}>
+        <article className={`${styles.card} ${isDoFirst ? styles.cardFirst : ""}`}>
           {isDoFirst ? (
-            <span className={styles.firstBand}>{t(locale, "s5.doFirst")}</span>
+            <div className={styles.firstBand}>
+              <span>{t(locale, "s5.doFirst")}</span>
+              <button
+                type="button"
+                className={styles.remove}
+                onClick={() => removeTask(task.code)}
+              >
+                {t(locale, "s5.remove")}
+              </button>
+            </div>
           ) : null}
           <div className={styles.cardBody}>
-            <StatusChip status={chipFor(task, view?.unknownDerived ?? new Set())} locale={locale} />
-            {/* Stretched link: the whole card routes to S6, while the
-                provenance link below stays independently tappable. */}
-            <Link
-              href={withLocale(`/task/${task.code}`, locale.code)}
-              className={styles.cardLink}
-              onClick={guardClick}
-            >
-              <span className={styles.taskName}>{def ? def.name : task.code}</span>
-            </Link>
+            {!isDoFirst ? (
+              <div className={styles.cardTop}>
+                {showChip ? <StatusChip status={status} locale={locale} /> : null}
+                <button
+                  type="button"
+                  className={styles.remove}
+                  onClick={() => removeTask(task.code)}
+                >
+                  {t(locale, "s5.remove")}
+                </button>
+              </div>
+            ) : null}
+            {practiceHref ? (
+              <Link href={practiceHref} className={styles.taskNameLink} onClick={guardClick}>
+                <span className={styles.taskName}>{name}</span>
+              </Link>
+            ) : (
+              <span className={styles.taskName}>{name}</span>
+            )}
             {def ? <span className={styles.department}>{def.department}</span> : null}
+            {detail ? <span className={styles.department}>{detail}</span> : null}
             {task.preCompleted ? (
               <span className={styles.preNote}>{t(locale, "s5.preCompletedNote")}</span>
             ) : null}
@@ -252,25 +322,21 @@ function JourneyScreen() {
               <span className={styles.offlineChip}>{t(locale, "s5.offlineSubmit")}</span>
             ) : null}
             {task.status === "locked" && task.lockReason ? (
-              /* A lock without its stated reason on the face is a defect
-                 (D3 S5). Unreachable with the T1-only roster. */
               <span className={styles.lockNote}>{task.lockReason}</span>
             ) : null}
+            {sourceUrl ? (
+              <a
+                className={styles.officialLink}
+                href={sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <span className={styles.officialLabel}>{t(locale, "s5.openOfficial")}</span>
+                <span className={styles.officialHost}>{hostOf(sourceUrl)}</span>
+              </a>
+            ) : null}
             {def ? (
-              // Estimated days and fee are omitted: the roster cannot
-              // supply them (BUG-009), and a guess is banned (C4).
               <span className={styles.provenance}>
-                <span className={styles.metaLine}>
-                  {t(locale, "meta.source")}{" "}
-                  <a
-                    className={styles.metaLink}
-                    href={def.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {hostOf(def.sourceUrl)}
-                  </a>
-                </span>
                 <span className={styles.metaLine}>
                   {t(locale, "meta.verified")} {def.lastVerified}
                 </span>
@@ -314,14 +380,14 @@ function JourneyScreen() {
               {view.diff.added.map((task) => (
                 <span key={`added-${task.code}`} className={styles.diffLine}>
                   {t(locale, "s5.diff.added", {
-                    task: taskName(task.code),
+                    task: taskName(task),
                     reason: t(locale, reasonFor(task.code)),
                   })}
                 </span>
               ))}
               {view.diff.removed.map((code) => (
                 <span key={`removed-${code}`} className={styles.diffLine}>
-                  {t(locale, "s5.diff.removed", { task: taskName(code) })}
+                  {t(locale, "s5.diff.removed", { task: taskName({ code }) })}
                 </span>
               ))}
             </div>
@@ -366,7 +432,9 @@ function JourneyScreen() {
                 <ProgressRing done={doneCount} total={activeTasks.length} />
               </div>
 
-              <span className={styles.honesty}>{t(locale, "s5.honestyChip")}</span>
+              <span className={styles.honesty}>
+                {t(locale, view.agent ? "s5.honestySnapshot" : "s5.honestyChip")}
+              </span>
 
               {complete ? (
                 <section className={styles.complete}>
@@ -397,7 +465,7 @@ function JourneyScreen() {
                           {/* Read-only, and onSunken for BUG-006. */}
                           <StatusChip status={{ kind: "archived" }} locale={locale} onSunken />
                           <span className={styles.archivedName}>
-                            {def ? def.name : task.code}
+                            {taskName(task)}
                           </span>
                           <span className={styles.archivedNote}>
                             {t(locale, "s5.archivedNote")}
@@ -435,7 +503,7 @@ function JourneyScreen() {
                   {t(locale, "s5.share")}
                 </button>
                 <Link className={styles.changeAnswers} href={backHref} onClick={guardClick}>
-                  {t(locale, "s5.changeAnswers")}
+                  {t(locale, view.agent ? "s5.askAgain" : "s5.changeAnswers")}
                 </Link>
               </div>
             </>

@@ -48,6 +48,7 @@ const REGISTERED: Record<string, [StrKey, StrKey]> = {
 const STATES: Record<string, [StrKey, StrKey]> = {
   assam: ["s4.fact.state.assam", "s4.chip.state.assam"],
   maharashtra: ["s4.fact.state.maharashtra", "s4.chip.state.maharashtra"],
+  karnataka: ["s4.fact.state.karnataka", "s4.chip.state.karnataka"],
 };
 const WORK: Record<string, [StrKey, StrKey]> = {
   company: ["s4.fact.work.company", "s4.chip.work.company"],
@@ -196,6 +197,7 @@ function ConfirmScreen() {
   const params = useSearchParams();
   const router = useRouter();
   const [locale, setLocale] = useState<LocaleDefinition>(DEFAULT_LOCALE);
+  const [agentSummary, setAgentSummary] = useState<string | null>(null);
   const [loaded, setLoaded] = useState<Loaded>({ phase: "loading" });
   const [locked, setLocked] = useState(false);
   const [audioNote, setAudioNote] = useState(false);
@@ -211,7 +213,9 @@ function ConfirmScreen() {
       findLocale(params.get("locale") ?? readLocale() ?? undefined) ?? DEFAULT_LOCALE;
     setLocale(effLocale);
 
-    const answers = readJourney()?.answers ?? [];
+    const journey = readJourney();
+    setAgentSummary(journey?.agentSummary ?? null);
+    const answers = journey?.answers ?? [];
     // Entry precondition (D3 S4): at least one recorded answer.
     if (answeredCount(answers) < 1) {
       setLoaded({ phase: "redirect" });
@@ -312,6 +316,13 @@ function ConfirmScreen() {
               </Link>
 
               <h1 className={styles.heading}>{t(locale, "s4.heading")}</h1>
+
+              {agentSummary ? (
+                <section className={styles.agentCard}>
+                  <p className={styles.agentHeading}>{t(locale, "s4.agent.heading")}</p>
+                  <p className={styles.summaryText}>{agentSummary}</p>
+                </section>
+              ) : null}
 
               {/* D11 §2: the S4 summary card is one of the two surfaces
                   where elevation is real and a shadow is allowed. */}

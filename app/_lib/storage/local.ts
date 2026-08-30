@@ -5,6 +5,7 @@ import {
   emptyJourney,
   migrate,
   type JourneyRecord,
+  type OnboardState,
 } from "./schema";
 
 /**
@@ -60,6 +61,45 @@ export function readSaveKey(): string | null {
 
 export function writeSaveKey(key: string): void {
   storage()?.setItem(STORAGE_KEYS.saveKey, key);
+}
+
+/* ------------------------------------------------------------------ */
+/* practice session (login page; same invented number as SH1)          */
+/* ------------------------------------------------------------------ */
+
+/** Last four digits of the practice number, or null if signed out. */
+export function readSessionLast4(): string | null {
+  return storage()?.getItem(STORAGE_KEYS.session) ?? null;
+}
+
+export function writeSession(phone: string): void {
+  const store = storage();
+  if (!store) return;
+  store.setItem(STORAGE_KEYS.saveKey, phone);
+  store.setItem(STORAGE_KEYS.session, phone.slice(-4));
+}
+
+export function clearSession(): void {
+  storage()?.removeItem(STORAGE_KEYS.session);
+}
+
+export function readOnboarded(): boolean {
+  return storage()?.getItem(STORAGE_KEYS.onboarded) === "1";
+}
+
+export function writeOnboarded(): void {
+  storage()?.setItem(STORAGE_KEYS.onboarded, "1");
+}
+
+const STATES = new Set<OnboardState>(["assam", "maharashtra", "karnataka", "other"]);
+
+export function readState(): OnboardState | null {
+  const value = storage()?.getItem(STORAGE_KEYS.state);
+  return value && STATES.has(value as OnboardState) ? (value as OnboardState) : null;
+}
+
+export function writeState(state: OnboardState): void {
+  storage()?.setItem(STORAGE_KEYS.state, state);
 }
 
 /* ------------------------------------------------------------------ */
@@ -135,6 +175,7 @@ export function mutate(
 
 export function clearJourney(): void {
   storage()?.removeItem(STORAGE_KEYS.journey);
+  for (const listener of mutateListeners) listener();
 }
 
 /* ------------------------------------------------------------------ */

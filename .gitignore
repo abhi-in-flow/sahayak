@@ -13,6 +13,7 @@ desktop.ini
 *.local
 .env
 .env.*
+!.env.example
 
 # Build output (reserved for when implementation lands)
 node_modules/
@@ -33,3 +34,7 @@ docs/
 progress.md
 bugs.md
 decision.md
+
+certificates
+extract-data-*.json
+services-corpus.json

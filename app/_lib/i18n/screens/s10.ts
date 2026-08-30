@@ -42,6 +42,9 @@ export interface S10Strings {
   /** National variant content labels. */
   "s10.nationalPortal": string;
   "s10.nationalLegal": string;
+
+  /** Non-Assam state: no sourced local office (C4). */
+  "s10.otherBody": string;
 }
 
 export const enS10: S10Strings = {
@@ -73,6 +76,8 @@ export const enS10: S10Strings = {
 
   "s10.nationalPortal": "Official portal",
   "s10.nationalLegal": "National Legal Services Authority",
+  "s10.otherBody":
+    "We have a sourced office listing only for Assam. We will not invent a local address for your state. Use the official portal below, or ask Sahayak for a service from our snapshot.",
 };
 
 export const hiS10: S10Strings = {
@@ -104,4 +109,6 @@ export const hiS10: S10Strings = {
 
   "s10.nationalPortal": "सरकारी पोर्टल",
   "s10.nationalLegal": "राष्ट्रीय विधिक सेवा प्राधिकरण",
+  "s10.otherBody":
+    "हमारे पास सत्यापित दफ़्तर की सूची सिर्फ़ असम के लिए है। आपके राज्य का पता हम बनाकर नहीं लिखेंगे। नीचे आधिकारिक पोर्टल देखें, या स्नैपशॉट से सेवा के लिए सहायक से पूछें।",
 };

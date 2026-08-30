@@ -19,6 +19,8 @@ const GESTURE_MS = 300; // D5 5.3
 export interface MicButtonProps {
   listening: boolean;
   disabled?: boolean;
+  /** 48px circle for the chat composer. Label stays on the control for a11y. */
+  compact?: boolean;
   /** Shown directly below when disabled: a reason, never a silent grey (D3 S2). */
   disabledReason?: string;
   labels: { idle: string; tapStop: string; holdStop: string };
@@ -31,6 +33,7 @@ export interface MicButtonProps {
 export function MicButton({
   listening,
   disabled = false,
+  compact = false,
   disabledReason,
   labels,
   onGestureMode,
@@ -97,12 +100,13 @@ export function MicButton({
     : labels.idle;
 
   return (
-    <div className={styles.wrap}>
+    <div className={`${styles.wrap} ${compact ? styles.compact : ""}`}>
       <button
         type="button"
         className={`${styles.button} ${listening ? styles.listening : ""}`}
         disabled={disabled}
         aria-pressed={listening}
+        aria-label={helper}
         onPointerDown={pointerDown}
         onPointerUp={pointerUp}
         onPointerLeave={() => {
@@ -123,9 +127,12 @@ export function MicButton({
       >
         <span className={styles.circle} aria-hidden="true">
           {listening ? (
-            <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
-              <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
-            </svg>
+            <span className={styles.bars}>
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
           ) : (
             <svg
               width="34"
@@ -141,11 +148,17 @@ export function MicButton({
             </svg>
           )}
         </span>
-        <span className={styles.label}>{listening ? labels.tapStop : labels.idle}</span>
+        {compact ? (
+          <span className={styles.sr}>{helper}</span>
+        ) : (
+          <span className={styles.label}>{listening ? labels.tapStop : labels.idle}</span>
+        )}
       </button>
-      <p className={styles.helper} aria-live="polite">
-        {helper}
-      </p>
+      {!compact && listening ? (
+        <p className={styles.helper} aria-live="polite">
+          {helper}
+        </p>
+      ) : null}
       {disabled && disabledReason ? (
         <p className={styles.reason}>{disabledReason}</p>
       ) : null}

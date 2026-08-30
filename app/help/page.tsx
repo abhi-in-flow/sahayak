@@ -5,6 +5,7 @@ import { requiredDocuments } from "@/app/_lib/documents";
 import { HELPLINES, NATIONAL_GUIDANCE, SEED_LEGAL_AID, SEED_OFFICE } from "@/app/_lib/offices";
 import { TASKS } from "@/app/_lib/tasks";
 import { ChecklistActions } from "./_components/ChecklistActions";
+import { HelpScoped } from "./_components/HelpScoped";
 import { MapLink } from "./_components/MapLink";
 import { PhoneAction } from "./_components/PhoneAction";
 import styles from "./page.module.css";
@@ -140,6 +141,17 @@ export default async function HelpPage({
   }
   const checklistText = checklistLines.join("\n");
 
+  const otherChecklistText = [
+    t(locale, "s10.checklistTitle"),
+    t(locale, "s10.otherBody"),
+    `${t(locale, "s10.nationalPortal")}: ${NATIONAL_GUIDANCE.portalName}`,
+    NATIONAL_GUIDANCE.portalUrl,
+    `${t(locale, "s10.nationalLegal")}: ${NATIONAL_GUIDANCE.legalAidName}`,
+    NATIONAL_GUIDANCE.legalAidUrl,
+    t(locale, "s10.boundary"),
+    `${t(locale, "meta.verified")} ${NATIONAL_GUIDANCE.lastVerified}`,
+  ].join("\n");
+
   return (
     <>
       {/* The print-only checklist lives OUTSIDE .screenOnly so printing
@@ -150,7 +162,14 @@ export default async function HelpPage({
         <div className="shell">
           <main id="main" className={styles.main}>
             <h1 className={styles.heading}>
-              {t(locale, national ? "s10.generalHeading" : "s10.heading")}
+              {national ? (
+                t(locale, "s10.generalHeading")
+              ) : (
+                <HelpScoped
+                  assam={t(locale, "s10.heading")}
+                  other={t(locale, "s10.generalHeading")}
+                />
+              )}
             </h1>
 
             {national ? (
@@ -212,120 +231,170 @@ export default async function HelpPage({
                 </section>
               </>
             ) : (
-              <>
-                {/* Office block. Full address is server-rendered text and
-                    stays visible in every state, including offline. */}
-                <section className={styles.card} aria-labelledby="s10-office">
-                  <h2 id="s10-office" className={styles.subHeading}>
-                    {t(locale, "s10.officeTitle")}
-                  </h2>
-                  <p className={styles.entryName}>{SEED_OFFICE.name}</p>
-                  <address className={styles.address}>
-                    {SEED_OFFICE.addressLines.map((line) => (
-                      <span key={line} className={styles.addressLine}>
-                        {line}
-                      </span>
-                    ))}
-                  </address>
-                  {/* SEED_OFFICE.hours is absent (C4): hours render only
-                      from sourced data, so the line is omitted here
-                      rather than invented. */}
-                  <MapLink
-                    href={mapUrl}
-                    label={t(locale, "s10.mapLink")}
-                    offlineReason={t(locale, "s10.mapOffline")}
-                  />
-                  <Provenance
-                    locale={locale}
-                    sourceUrl={SEED_OFFICE.sourceUrl}
-                    lastVerified={SEED_OFFICE.lastVerified}
-                    state={SEED_OFFICE.state}
-                  />
-                </section>
+              <HelpScoped
+                assam={
+                  <>
+                    <section className={styles.card} aria-labelledby="s10-office">
+                      <h2 id="s10-office" className={styles.subHeading}>
+                        {t(locale, "s10.officeTitle")}
+                      </h2>
+                      <p className={styles.entryName}>{SEED_OFFICE.name}</p>
+                      <address className={styles.address}>
+                        {SEED_OFFICE.addressLines.map((line) => (
+                          <span key={line} className={styles.addressLine}>
+                            {line}
+                          </span>
+                        ))}
+                      </address>
+                      <MapLink
+                        href={mapUrl}
+                        label={t(locale, "s10.mapLink")}
+                        offlineReason={t(locale, "s10.mapOffline")}
+                      />
+                      <Provenance
+                        locale={locale}
+                        sourceUrl={SEED_OFFICE.sourceUrl}
+                        lastVerified={SEED_OFFICE.lastVerified}
+                        state={SEED_OFFICE.state}
+                      />
+                    </section>
 
-                {/* Documents to carry, only with a real task context
-                    (entry b from S6) whose requirement set is sourced. */}
-                {task && docs.length > 0 ? (
-                  <section className={styles.card} aria-labelledby="s10-carry">
-                    <h2 id="s10-carry" className={styles.subHeading}>
-                      {t(locale, "s10.carryTitle")}
-                    </h2>
-                    <p className={styles.carryFor}>
-                      {t(locale, "s10.carryFor", { task: task.name })}
-                    </p>
-                    <ul className={styles.docList}>
-                      {docs.map((code) => {
-                        const label = docLabel(locale, code);
-                        return label ? <li key={code}>{label}</li> : null;
-                      })}
-                    </ul>
-                  </section>
-                ) : null}
+                    {task && docs.length > 0 ? (
+                      <section className={styles.card} aria-labelledby="s10-carry">
+                        <h2 id="s10-carry" className={styles.subHeading}>
+                          {t(locale, "s10.carryTitle")}
+                        </h2>
+                        <p className={styles.carryFor}>
+                          {t(locale, "s10.carryFor", { task: task.name })}
+                        </p>
+                        <ul className={styles.docList}>
+                          {docs.map((code) => {
+                            const label = docLabel(locale, code);
+                            return label ? <li key={code}>{label}</li> : null;
+                          })}
+                        </ul>
+                      </section>
+                    ) : null}
 
-                {/* D6 6.1: the checklist print anchor sits between the
-                    office block and the helplines. */}
-                <ChecklistActions
-                  printLabel={t(locale, "s10.printCta")}
-                  shareLabel={t(locale, "s10.share")}
-                  checklistText={checklistText}
-                />
+                    <ChecklistActions
+                      printLabel={t(locale, "s10.printCta")}
+                      shareLabel={t(locale, "s10.share")}
+                      checklistText={checklistText}
+                    />
 
-                <section className={styles.card} aria-labelledby="s10-helplines">
-                  <h2 id="s10-helplines" className={styles.subHeading}>
-                    {t(locale, "s10.helplines")}
-                  </h2>
-                  <ul className={styles.plainList}>
-                    {helplines.map((entry) => (
-                      <li key={entry.number} className={styles.entry}>
-                        <p className={styles.entryName}>{entry.name}</p>
+                    <section className={styles.card} aria-labelledby="s10-helplines">
+                      <h2 id="s10-helplines" className={styles.subHeading}>
+                        {t(locale, "s10.helplines")}
+                      </h2>
+                      <ul className={styles.plainList}>
+                        {helplines.map((entry) => (
+                          <li key={entry.number} className={styles.entry}>
+                            <p className={styles.entryName}>{entry.name}</p>
+                            <PhoneAction
+                              number={entry.number}
+                              callLabel={t(locale, "s10.call", { number: entry.number })}
+                              copyLabel={t(locale, "s10.copy")}
+                              copiedLabel={t(locale, "s10.copied")}
+                            />
+                            <Provenance
+                              locale={locale}
+                              sourceUrl={entry.sourceUrl}
+                              lastVerified={entry.lastVerified}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+
+                    <section className={styles.card} aria-labelledby="s10-legal">
+                      <h2 id="s10-legal" className={styles.subHeading}>
+                        {t(locale, "s10.legalTitle")}
+                      </h2>
+                      <p className={styles.body}>{t(locale, "s10.legalBody")}</p>
+                      <p className={styles.entryName}>{SEED_LEGAL_AID.name}</p>
+                      <address className={styles.address}>
+                        {SEED_LEGAL_AID.addressLines.map((line) => (
+                          <span key={line} className={styles.addressLine}>
+                            {line}
+                          </span>
+                        ))}
+                      </address>
+                      {SEED_LEGAL_AID.phone ? (
                         <PhoneAction
-                          number={entry.number}
-                          callLabel={t(locale, "s10.call", { number: entry.number })}
+                          number={SEED_LEGAL_AID.phone}
+                          callLabel={t(locale, "s10.call", { number: SEED_LEGAL_AID.phone })}
                           copyLabel={t(locale, "s10.copy")}
                           copiedLabel={t(locale, "s10.copied")}
                         />
-                        <Provenance
-                          locale={locale}
-                          sourceUrl={entry.sourceUrl}
-                          lastVerified={entry.lastVerified}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </section>
+                      ) : null}
+                      <p className={styles.boundary}>{t(locale, "s10.boundary")}</p>
+                      <Provenance
+                        locale={locale}
+                        sourceUrl={SEED_LEGAL_AID.sourceUrl}
+                        lastVerified={SEED_LEGAL_AID.lastVerified}
+                      />
+                    </section>
+                  </>
+                }
+                other={
+                  <>
+                    <section className={styles.card} aria-labelledby="s10-office">
+                      <h2 id="s10-office" className={styles.subHeading}>
+                        {t(locale, "s10.officeTitle")}
+                      </h2>
+                      <p className={styles.body}>{t(locale, "s10.otherBody")}</p>
+                    </section>
 
-                <section className={styles.card} aria-labelledby="s10-legal">
-                  <h2 id="s10-legal" className={styles.subHeading}>
-                    {t(locale, "s10.legalTitle")}
-                  </h2>
-                  <p className={styles.body}>{t(locale, "s10.legalBody")}</p>
-                  <p className={styles.entryName}>{SEED_LEGAL_AID.name}</p>
-                  <address className={styles.address}>
-                    {SEED_LEGAL_AID.addressLines.map((line) => (
-                      <span key={line} className={styles.addressLine}>
-                        {line}
-                      </span>
-                    ))}
-                  </address>
-                  {/* SEED_LEGAL_AID.phone is optional (C4); the same
-                      non-telephony fallback applies as for helplines. */}
-                  {SEED_LEGAL_AID.phone ? (
-                    <PhoneAction
-                      number={SEED_LEGAL_AID.phone}
-                      callLabel={t(locale, "s10.call", { number: SEED_LEGAL_AID.phone })}
-                      copyLabel={t(locale, "s10.copy")}
-                      copiedLabel={t(locale, "s10.copied")}
+                    <section className={styles.card} aria-labelledby="s10-portal">
+                      <h2 id="s10-portal" className={styles.subHeading}>
+                        {t(locale, "s10.nationalPortal")}
+                      </h2>
+                      <p className={styles.entryName}>{NATIONAL_GUIDANCE.portalName}</p>
+                      <a
+                        className={styles.externalLink}
+                        href={NATIONAL_GUIDANCE.portalUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {NATIONAL_GUIDANCE.portalUrl}
+                      </a>
+                      <Provenance
+                        locale={locale}
+                        sourceUrl={NATIONAL_GUIDANCE.portalUrl}
+                        lastVerified={NATIONAL_GUIDANCE.lastVerified}
+                      />
+                    </section>
+
+                    <ChecklistActions
+                      printLabel={t(locale, "s10.printCta")}
+                      shareLabel={t(locale, "s10.share")}
+                      checklistText={otherChecklistText}
                     />
-                  ) : null}
-                  {/* C5 boundary statement, rendered prominently. */}
-                  <p className={styles.boundary}>{t(locale, "s10.boundary")}</p>
-                  <Provenance
-                    locale={locale}
-                    sourceUrl={SEED_LEGAL_AID.sourceUrl}
-                    lastVerified={SEED_LEGAL_AID.lastVerified}
-                  />
-                </section>
-              </>
+
+                    <section className={styles.card} aria-labelledby="s10-legal">
+                      <h2 id="s10-legal" className={styles.subHeading}>
+                        {t(locale, "s10.legalTitle")}
+                      </h2>
+                      <p className={styles.body}>{t(locale, "s10.legalBody")}</p>
+                      <p className={styles.entryName}>{NATIONAL_GUIDANCE.legalAidName}</p>
+                      <a
+                        className={styles.externalLink}
+                        href={NATIONAL_GUIDANCE.legalAidUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {t(locale, "s10.nationalLegal")}
+                      </a>
+                      <p className={styles.boundary}>{t(locale, "s10.boundary")}</p>
+                      <Provenance
+                        locale={locale}
+                        sourceUrl={NATIONAL_GUIDANCE.legalAidUrl}
+                        lastVerified={NATIONAL_GUIDANCE.lastVerified}
+                      />
+                    </section>
+                  </>
+                }
+              />
             )}
           </main>
           <GlobalFooter locale={locale} />
@@ -362,54 +431,86 @@ export default async function HelpPage({
             </div>
           </>
         ) : (
-          <>
-            <div className={styles.printBlock}>
-              <p className={styles.printName}>{SEED_OFFICE.name}</p>
-              {SEED_OFFICE.addressLines.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-            </div>
-            {task && docs.length > 0 ? (
-              <div className={styles.printBlock}>
-                <p className={styles.printName}>{t(locale, "s10.carryTitle")}</p>
-                <p>{t(locale, "s10.carryFor", { task: task.name })}</p>
-                <ul className={styles.printList}>
-                  {docs.map((code) => {
-                    const label = docLabel(locale, code);
-                    return label ? <li key={code}>{label}</li> : null;
-                  })}
-                </ul>
-              </div>
-            ) : null}
-            {helplines.length > 0 ? (
-              <div className={styles.printBlock}>
-                <p className={styles.printName}>{t(locale, "s10.helplines")}</p>
-                {helplines.map((entry) => (
-                  <p key={entry.number}>
-                    {entry.name}: {entry.number}
+          <HelpScoped
+            assam={
+              <>
+                <div className={styles.printBlock}>
+                  <p className={styles.printName}>{SEED_OFFICE.name}</p>
+                  {SEED_OFFICE.addressLines.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                </div>
+                {task && docs.length > 0 ? (
+                  <div className={styles.printBlock}>
+                    <p className={styles.printName}>{t(locale, "s10.carryTitle")}</p>
+                    <p>{t(locale, "s10.carryFor", { task: task.name })}</p>
+                    <ul className={styles.printList}>
+                      {docs.map((code) => {
+                        const label = docLabel(locale, code);
+                        return label ? <li key={code}>{label}</li> : null;
+                      })}
+                    </ul>
+                  </div>
+                ) : null}
+                {helplines.length > 0 ? (
+                  <div className={styles.printBlock}>
+                    <p className={styles.printName}>{t(locale, "s10.helplines")}</p>
+                    {helplines.map((entry) => (
+                      <p key={entry.number}>
+                        {entry.name}: {entry.number}
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
+                <div className={styles.printBlock}>
+                  <p className={styles.printName}>{SEED_LEGAL_AID.name}</p>
+                  {SEED_LEGAL_AID.addressLines.map((line) => (
+                    <p key={line}>{line}</p>
+                  ))}
+                  {SEED_LEGAL_AID.phone ? <p>{SEED_LEGAL_AID.phone}</p> : null}
+                </div>
+                <div className={styles.printMeta}>
+                  <p>
+                    {t(locale, "meta.source")} {SEED_OFFICE.sourceUrl}
                   </p>
-                ))}
-              </div>
-            ) : null}
-            <div className={styles.printBlock}>
-              <p className={styles.printName}>{SEED_LEGAL_AID.name}</p>
-              {SEED_LEGAL_AID.addressLines.map((line) => (
-                <p key={line}>{line}</p>
-              ))}
-              {SEED_LEGAL_AID.phone ? <p>{SEED_LEGAL_AID.phone}</p> : null}
-            </div>
-            <div className={styles.printMeta}>
-              <p>
-                {t(locale, "meta.source")} {SEED_OFFICE.sourceUrl}
-              </p>
-              <p>
-                {t(locale, "meta.verified")} {SEED_OFFICE.lastVerified}
-              </p>
-              <p>
-                {t(locale, "meta.state")} {SEED_OFFICE.state}
-              </p>
-            </div>
-          </>
+                  <p>
+                    {t(locale, "meta.verified")} {SEED_OFFICE.lastVerified}
+                  </p>
+                  <p>
+                    {t(locale, "meta.state")} {SEED_OFFICE.state}
+                  </p>
+                </div>
+              </>
+            }
+            other={
+              <>
+                <div className={styles.printBlock}>
+                  <p>{t(locale, "s10.otherBody")}</p>
+                </div>
+                <div className={styles.printBlock}>
+                  <p className={styles.printName}>{t(locale, "s10.nationalPortal")}</p>
+                  <p>{NATIONAL_GUIDANCE.portalName}</p>
+                  <p>{NATIONAL_GUIDANCE.portalUrl}</p>
+                </div>
+                <div className={styles.printBlock}>
+                  <p className={styles.printName}>{t(locale, "s10.nationalLegal")}</p>
+                  <p>{NATIONAL_GUIDANCE.legalAidName}</p>
+                  <p>{NATIONAL_GUIDANCE.legalAidUrl}</p>
+                </div>
+                <div className={styles.printBlock}>
+                  <p>{t(locale, "s10.boundary")}</p>
+                </div>
+                <div className={styles.printMeta}>
+                  <p>
+                    {t(locale, "meta.source")} {NATIONAL_GUIDANCE.portalUrl}
+                  </p>
+                  <p>
+                    {t(locale, "meta.verified")} {NATIONAL_GUIDANCE.lastVerified}
+                  </p>
+                </div>
+              </>
+            }
+          />
         )}
       </div>
     </>

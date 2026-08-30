@@ -22,6 +22,7 @@ export interface S5Strings {
   /** C3 honesty chip. D10 10.8 renders it "Prototype - mock data"; the
    *  dash form is BUG-004's to settle. */
   "s5.honestyChip": string;
+  "s5.honestySnapshot": string;
 
   /* ---- banner family (D11 §3) --------------------------------------- */
   /** D3 S5, verbatim. */
@@ -46,9 +47,14 @@ export interface S5Strings {
   "s5.archivedNote": string;
   /** D3/D4 §4.4, verbatim. */
   "s5.preCompletedNote": string;
+  /** Official snapshot URL, shown once (not also as the title). */
+  "s5.openOfficial": string;
+  "s5.remove": string;
+  "s5.removeConfirm": string;
 
   /* ---- actions and states -------------------------------------------- */
   "s5.changeAnswers": string;
+  "s5.askAgain": string;
   "s5.saveList": string;
   "s5.share": string;
   "s5.shareTitle": string;
@@ -65,6 +71,7 @@ export const enS5: S5Strings = {
   "s5.progress": "{done} of {n} done",
   "s5.doFirst": "Do this first",
   "s5.honestyChip": "Prototype - mock data",
+  "s5.honestySnapshot": "Steps from our saved directory. We do not submit anything.",
 
   "s5.manualBanner": "Based on a common situation — check it fits you",
   "s5.manualChange": "Change",
@@ -79,8 +86,12 @@ export const enS5: S5Strings = {
   "s5.offlineSubmit": "Practice submission needs a connection",
   "s5.archivedNote": "Completed earlier — no longer part of your journey",
   "s5.preCompletedNote": "You told us this is already registered",
+  "s5.openOfficial": "Open official page",
+  "s5.remove": "Remove",
+  "s5.removeConfirm": "Remove this step from your list?",
 
   "s5.changeAnswers": "Change my answers",
+  "s5.askAgain": "Ask again",
   "s5.saveList": "Save this list",
   "s5.share": "Share or print",
   "s5.shareTitle": "My steps from Sahayak",
@@ -99,6 +110,7 @@ export const hiS5: S5Strings = {
   "s5.progress": "{n} में से {done} पूरे",
   "s5.doFirst": "सबसे पहले यह करें",
   "s5.honestyChip": "प्रोटोटाइप - नकली डेटा",
+  "s5.honestySnapshot": "चरण हमारी सेव निर्देशिका से हैं। हम कुछ जमा नहीं करते।",
 
   "s5.manualBanner": "एक आम स्थिति के आधार पर — जाँचिए कि यह आप पर फ़िट होता है या नहीं",
   "s5.manualChange": "बदलें",
@@ -113,8 +125,12 @@ export const hiS5: S5Strings = {
   "s5.offlineSubmit": "अभ्यास सबमिशन के लिए कनेक्शन चाहिए",
   "s5.archivedNote": "पहले पूरा हुआ — अब आपकी यात्रा का हिस्सा नहीं है",
   "s5.preCompletedNote": "आपने हमें बताया था कि यह पहले से पंजीकृत है",
+  "s5.openOfficial": "आधिकारिक पृष्ठ खोलें",
+  "s5.remove": "हटाएँ",
+  "s5.removeConfirm": "इस चरण को अपनी सूची से हटाएँ?",
 
   "s5.changeAnswers": "मेरे जवाब बदलें",
+  "s5.askAgain": "फिर पूछें",
   "s5.saveList": "यह सूची सेव करें",
   "s5.share": "शेयर करें या प्रिंट करें",
   "s5.shareTitle": "सहायक से मेरे कदम",

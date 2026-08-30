@@ -1,0 +1,88 @@
+[
+  {
+    "id": "t1-death-cert",
+    "title": "Death certificate (Assam, T1)",
+    "url": "https://crsorgi.gov.in/",
+    "fetchedAt": "2026-08-28",
+    "text": "A death certificate is the document almost everything else needs after a death. In Assam it is issued by the Registrar of Births and Deaths. The national portal is the Civil Registration System at crsorgi.gov.in. This product only guides; it never submits to that portal. Required practice documents: Medical Cause of Death Certificate, the deceased person's ID proof, your ID proof, and address proof. No fee if the death is reported within 21 days. From day 22 to day 30 a late fee of Rs 2 applies (Guwahati Municipal Corporation schedule, verified 2026-08-28)."
+  },
+  {
+    "id": "gmc-office",
+    "title": "Registrar of Births and Deaths, Guwahati Municipal Corporation",
+    "url": "https://gmc.assam.gov.in/information-services/registration-of-births-and-death",
+    "fetchedAt": "2026-08-28",
+    "text": "The seeded registrar office for Guwahati, Kamrup Metropolitan, Assam. Address: GMC Market branch office, Guwahati, Kamrup Metropolitan, Assam 781001. Map query: Guwahati Municipal Corporation office. Certificates are issued from GMC offices. Source verified 2026-08-28. This is a static snapshot, not a live government lookup."
+  },
+  {
+    "id": "t1-fee",
+    "title": "Assam death registration fee (GMC)",
+    "url": "https://gmc.assam.gov.in/information-services/registration-of-births-and-death",
+    "fetchedAt": "2026-08-28",
+    "text": "Fee for reporting a death in Guwahati Municipal Corporation area: no fee if reported within 21 days. From day 22 to day 30 a late fee of Rs 2 applies. The rest of the late-fee schedule was not verified and is not stated here. Verified 2026-08-28."
+  },
+  {
+    "id": "docs-t1",
+    "title": "Documents for a death certificate (practice list)",
+    "url": "https://crsorgi.gov.in/",
+    "fetchedAt": "2026-08-28",
+    "text": "For the death certificate step this guide models: Medical Cause of Death Certificate (DOC-MED), their ID proof (DOC-ID-D), your ID proof (DOC-ID-I), and address proof (DOC-ADDR). The practice death certificate (DOC-DEATH) is an output of the practice form, not an input. Sample IDs use SAMPLE-XXXX and must never be real Aadhaar or PAN numbers."
+  },
+  {
+    "id": "legal-aid-kamrup",
+    "title": "District Legal Services Authority, Kamrup Metropolitan",
+    "url": "https://aslsa.assam.gov.in/contact-us",
+    "fetchedAt": "2026-08-28",
+    "text": "For rights questions and free legal aid in Kamrup Metropolitan: District Legal Services Authority, District and Sessions Judge Office Campus, Panbazar, Guwahati, Assam 781001. Phone 6901281635. Source: Assam State Legal Services Authority contact page, verified 2026-08-28."
+  },
+  {
+    "id": "nalsa",
+    "title": "National Legal Services Authority",
+    "url": "https://nalsa.gov.in/",
+    "fetchedAt": "2026-08-28",
+    "text": "When the situation is not scoped to Assam, national legal-aid guidance is the National Legal Services Authority (NALSA) at nalsa.gov.in. This app does not file cases or contact NALSA for you."
+  },
+  {
+    "id": "crs-portal",
+    "title": "Civil Registration System portal",
+    "url": "https://crsorgi.gov.in/",
+    "fetchedAt": "2026-08-28",
+    "text": "Births and deaths in India are registered through the Civil Registration System. The public portal is crsorgi.gov.in. Sahayak never logs in, never submits a form, and never creates a real acknowledgement number. Practice acknowledgements start with PRACTICE-."
+  },
+  {
+    "id": "what-sahayak-does",
+    "title": "What Sahayak can and cannot do",
+    "url": "",
+    "fetchedAt": "2026-08-29",
+    "text": "Sahayak is an independent project, not a government website. It helps people work out which process applies after a death and what to do next. You can speak or type, answer a few questions, get a checklist, keep sample documents on this device, and practise a form. It does not submit to government systems, send SMS, take payments, or store Aadhaar or PAN. Login OTP is always 0000. Civic facts here are a static snapshot collected by the team, not a live scrape of india.gov.in."
+  },
+  {
+    "id": "browse-situations",
+    "title": "Common bereavement situations this guide covers",
+    "url": "",
+    "fetchedAt": "2026-08-29",
+    "text": "Seeded situations are all death and family-loss variants: death not yet registered, pension after a spouse dies, death certificate needed, company job versus retired versus self-employed, assets such as bank account, house or land. Only Assam has sourced offices and fees. Maharashtra can be selected but has no fabricated office list. Only task T1 (death certificate) is fully built."
+  },
+  {
+    "id": "practice-form",
+    "title": "Practice CRS-style death report",
+    "url": "https://crsorgi.gov.in/",
+    "fetchedAt": "2026-08-28",
+    "text": "The practice form models an Assam CRS death-report flow in four steps plus review. It is watermarked as practice. The acknowledgement number is invented and starts with PRACTICE-AS-. No OTP SMS is sent. Use 0000 if a practice code is asked."
+  },
+  {
+    "id": "bakijai-clearance",
+    "title": "Application form for Bakijai clearance certificate, Assam",
+    "url": "https://sewasetu.assam.gov.in/site/service-apply/issuance-of-bakijai-clearance-certificate",
+    "fetchedAt": "2026-08-29",
+    "region": "Assam",
+    "text": "A bakijai notice is a recovery case for unpaid government dues in Assam. People also call it a bakijai case or bakijai notice. The listed next step in this snapshot is a Bakijai clearance certificate on Sewa Setu Assam. Official listing: https://sewasetu.assam.gov.in/site/service-apply/issuance-of-bakijai-clearance-certificate. No online application is listed in this snapshot. This is a static snapshot collected by the team, not a live government system. If the person is not in Assam, say the snapshot is Assam-only and still point to this official URL."
+  },
+  {
+    "id": "income-certificate-assam",
+    "title": "Application form for Issue of Income Certificate, Assam",
+    "url": "https://sivasagar.assam.gov.in/sites/default/files/public_utility/INCOME.pdf",
+    "fetchedAt": "2026-08-29",
+    "region": "Assam",
+    "text": "An income certificate is a district document used for schemes and fees. In this snapshot the Assam listing is Application form for Issue of Income Certificate, Assam. Official form PDF from Sivasagar district: https://sivasagar.assam.gov.in/sites/default/files/public_utility/INCOME.pdf. No online application is listed in this snapshot. This is a static snapshot collected by the team, not a live government system. If the person is not in Assam, say the snapshot is Assam-only and still point to this official URL."
+  }
+]

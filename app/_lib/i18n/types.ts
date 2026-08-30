@@ -39,6 +39,7 @@ export interface BaseStrings {
   "s1.wordmark": string;
   "s1.headline": string;
   "s1.micCta": string;
+  "s1.micStarting": string;
   "s1.typeInstead": string;
   "s1.trustStrip": string;
   "s1.continueTitle": string;
@@ -48,6 +49,58 @@ export interface BaseStrings {
   "s1.audioGreeting": string;
   "s1.noJsHeading": string;
   "s1.noJsIntro": string;
+
+  /* ---- S1 hub: first-run guide, action grid, ask box, session ------ */
+  "s1.guide.title": string;
+  "s1.guide.skip": string;
+  "s1.guide.dismiss": string;
+  "s1.guide.1.title": string;
+  "s1.guide.1.body": string;
+  "s1.guide.2.title": string;
+  "s1.guide.2.body": string;
+  "s1.guide.3.title": string;
+  "s1.guide.3.body": string;
+  "s1.action.speak": string;
+  "s1.action.type": string;
+  "s1.action.browse": string;
+  "s1.action.resume": string;
+  "s1.action.documents": string;
+  "s1.action.help": string;
+  "s1.action.whatsReal": string;
+  "s1.action.login": string;
+  "s1.session.in": string;
+  "s1.session.out": string;
+  "s1.ask.label": string;
+  "s1.ask.helper": string;
+  "s1.ask.submit": string;
+  "s1.ask.working": string;
+  "s1.ask.error": string;
+  "s1.ask.sources": string;
+
+  /* ---- practice login (/login); reuses SH1 phone/OTP copy ---------- */
+  "login.title": string;
+  "login.headline": string;
+  "login.cta": string;
+  "login.back": string;
+  "login.guest": string;
+  "login.done": string;
+  "login.signOut": string;
+
+  "chrome.tab.home": string;
+  "chrome.tab.speak": string;
+  "chrome.tab.journey": string;
+  "chrome.tab.help": string;
+
+  "onboard.title": string;
+  "onboard.lang": string;
+  "onboard.state": string;
+  "onboard.state.helper": string;
+  "onboard.state.assam": string;
+  "onboard.state.maharashtra": string;
+  "onboard.state.karnataka": string;
+  "onboard.state.other": string;
+  "onboard.continue": string;
+  "s1.state.chip": string;
 
   /* ---- batch-3 stub screens (honest placeholders) ------------------ */
   "stub.title": string;

@@ -1,0 +1,36 @@
+/* Persistent bottom tabs. Mobile-app chrome, 360px baseline. */
+
+.bar {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--surface);
+  border-top: 1px solid var(--line-600);
+  padding: var(--sp-1) var(--sp-2) calc(var(--sp-2) + env(safe-area-inset-bottom));
+  z-index: 8;
+}
+
+.tab {
+  min-height: var(--target-min);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink-500);
+  font-size: var(--size-meta);
+  font-weight: 500;
+  padding: var(--sp-2);
+}
+
+.tabActive {
+  color: var(--accent-800);
+  font-weight: 600;
+}

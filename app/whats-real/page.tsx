@@ -9,7 +9,7 @@ import styles from "./page.module.css";
  * S11 - "What's real and what's mocked here" (C7). D3 S11; D12 4.
  *
  * Static Server Component. Loading, Empty and Error CANNOT OCCUR: all
- * nine rows are bundled content compiled into this route. There is no
+ * ten rows are bundled content compiled into this route. There is no
  * fetch, no cache dependency and no user input, so there is nothing to
  * load, nothing to be empty and nothing to fail. The state table's
  * other rows are unreachable for that reason.
@@ -39,6 +39,7 @@ const ROWS: readonly Row[] = [
   { label: "s11.row7.label", note: "s11.row7.note", status: "static" },
   { label: "s11.row8.label", note: "s11.row8.note", status: "static" },
   { label: "s11.row9.label", note: "s11.row9.note", status: "na" },
+  { label: "s11.row10.label", note: "s11.row10.note", status: "static" },
 ];
 
 function firstValue(value: string | string[] | undefined): string | undefined {

@@ -10,6 +10,7 @@ import { MicButton } from "@/app/_components/MicButton";
 import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
 import { matchesRealId } from "@/app/_lib/realId";
+import { interpretAndStore } from "@/app/_lib/agent/client";
 import { SpeechCapture, type CaptureError } from "@/app/_lib/speech";
 import { mutate, readJourney } from "@/app/_lib/storage/local";
 import { ExampleChips, type ExampleChipsStrings } from "./ExampleChips";
@@ -97,6 +98,7 @@ export interface CaptureVoiceStrings {
   primerClose: string;
   a11yStarted: string;
   a11yStopped: string;
+  transcribing: string;
 }
 
 interface CaptureVoiceProps {
@@ -120,7 +122,7 @@ export function CaptureVoice({ localeCode, endonym, strings }: CaptureVoiceProps
   const router = useRouter();
   const online = useSyncExternalStore(subscribeOnline, getOnlineSnapshot, getOnlineServerSnapshot);
 
-  const [phase, setPhase] = useState<"idle" | "listening" | "done">("idle");
+  const [phase, setPhase] = useState<"idle" | "listening" | "transcribing" | "done">("idle");
   const [live, setLive] = useState("");
   const [text, setText] = useState("");
   const [error, setError] = useState<VoiceError | null>(null);
@@ -145,6 +147,9 @@ export function CaptureVoice({ localeCode, endonym, strings }: CaptureVoiceProps
   const listeningRef = useRef(false);
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const focusFieldRef = useRef(false);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const usingSarvamRef = useRef(false);
 
   const hasText = text.trim().length > 0;
   const e16Active = matchesRealId(text);
@@ -379,19 +384,25 @@ export function CaptureVoice({ localeCode, endonym, strings }: CaptureVoiceProps
     setPhase("listening");
     announce(strings.a11yStarted);
 
-    const capture = new SpeechCapture();
-    captureRef.current = capture;
-    capture.start(localeCode, {
-      onPartial: handlePartial,
-      onFinal: handleFinal,
-      onError: handleError,
-      onEnd: handleEnd,
-    });
-    startLevel();
+    if (online) {
+      startSarvamCapture()
+        .then((started) => {
+          if (!started && listeningRef.current) startWebSpeech();
+        })
+        .catch(() => {
+          if (listeningRef.current) startWebSpeech();
+        });
+      return;
+    }
+    startWebSpeech();
   }
 
   function stopCapture() {
     clearSilence();
+    if (usingSarvamRef.current && recorderRef.current && recorderRef.current.state !== "inactive") {
+      recorderRef.current.stop();
+      return;
+    }
     captureRef.current?.stop(); // graceful: lets the engine flush a final result
   }
 
@@ -399,6 +410,9 @@ export function CaptureVoice({ localeCode, endonym, strings }: CaptureVoiceProps
     // Leaving the screen hard-stops everything (D11 4 teardown).
     return () => {
       captureRef.current?.abort();
+      if (recorderRef.current && recorderRef.current.state !== "inactive") {
+        recorderRef.current.stop();
+      }
       stopLevel();
       clearSilence();
     };
@@ -459,9 +473,122 @@ export function CaptureVoice({ localeCode, endonym, strings }: CaptureVoiceProps
     if (lowConfidence) setLowConfidence(false); // editing is the recovery path (D3 S2)
   }
 
-  function onConfirm() {
+  function applyCaptured(captured: string) {
+    setText(captured);
+    textRef.current = captured;
+    persist(captured);
+    setLowConfidence(true);
+    setError(null);
+    focusFieldRef.current = true;
+    setPhase("done");
+    announce(strings.a11yStopped);
+  }
+
+  function pickRecorderMime(): string | undefined {
+    if (typeof MediaRecorder === "undefined") return undefined;
+    if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) return "audio/webm;codecs=opus";
+    if (MediaRecorder.isTypeSupported("audio/webm")) return "audio/webm";
+    if (MediaRecorder.isTypeSupported("audio/mp4")) return "audio/mp4";
+    return undefined;
+  }
+
+  function attachAnalyser(stream: MediaStream) {
+    const ctx = new AudioContext();
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 512;
+    ctx.createMediaStreamSource(stream).connect(analyser);
+    streamRef.current = stream;
+    audioCtxRef.current = ctx;
+    analyserRef.current = analyser;
+    const buffer = new Uint8Array(analyser.fftSize);
+    levelTimer.current = setInterval(() => {
+      analyser.getByteTimeDomainData(buffer);
+      let peak = 0;
+      for (let i = 0; i < buffer.length; i += 1) {
+        const deviation = Math.abs(buffer[i] - 128);
+        if (deviation > peak) peak = deviation;
+      }
+      setLevel(Math.min(1, peak / 96));
+    }, LEVEL_MS);
+  }
+
+  async function transcribeBlob(blob: Blob): Promise<string | null> {
+    const form = new FormData();
+    const mime = blob.type || "audio/webm";
+    const filename = mime.includes("mp4") ? "speech.mp4" : "speech.webm";
+    form.append("file", blob, filename);
+    form.append("language", localeCode);
+    const response = await fetch("/api/stt", { method: "POST", body: form });
+    if (!response.ok) return null;
+    const data = (await response.json()) as { transcript?: string };
+    return data.transcript?.trim() || null;
+  }
+
+  function startWebSpeech() {
+    usingSarvamRef.current = false;
+    const capture = new SpeechCapture();
+    captureRef.current = capture;
+    capture.start(localeCode, {
+      onPartial: handlePartial,
+      onFinal: handleFinal,
+      onError: handleError,
+      onEnd: handleEnd,
+    });
+    startLevel();
+  }
+
+  async function startSarvamCapture(): Promise<boolean> {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      return false;
+    }
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (!listeningRef.current) {
+      stream.getTracks().forEach((track) => track.stop());
+      return false;
+    }
+    const mime = pickRecorderMime();
+    const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+    chunksRef.current = [];
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunksRef.current.push(event.data);
+    };
+    recorder.onstop = () => {
+      void (async () => {
+        stopLevel();
+        usingSarvamRef.current = false;
+        recorderRef.current = null;
+        setPhase("transcribing");
+        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
+        try {
+          const transcript = await transcribeBlob(blob);
+          if (transcript) {
+            applyCaptured(transcript);
+            return;
+          }
+        } catch {
+          // Fall through to E-04.
+        }
+        failedRef.current += 1;
+        if (failedRef.current >= 2) {
+          router.push(withLocale("/capture/text?note=e04", localeCode));
+          return;
+        }
+        setError({ code: "E04", message: strings.errorE04 });
+        announce(strings.errorE04);
+        setPhase(priorTextRef.current ? "done" : "idle");
+      })();
+    };
+    usingSarvamRef.current = true;
+    recorderRef.current = recorder;
+    attachAnalyser(stream);
+    recorder.start();
+    return true;
+  }
+
+  async function onConfirm() {
     if (!hasText || e16Active || submitting) return;
-    setSubmitting(true); // single navigation (D3 S2)
+    setSubmitting(true);
+    await interpretAndStore(textRef.current, localeCode);
     router.push(withLocale("/clarify/1", localeCode));
   }
 
@@ -513,7 +640,11 @@ export function CaptureVoice({ localeCode, endonym, strings }: CaptureVoiceProps
         />
       ) : null}
 
-      {phase === "done" ? (
+      {phase === "transcribing" ? (
+        <section className={styles.captureArea}>
+          <p className={styles.live}>{strings.transcribing}</p>
+        </section>
+      ) : phase === "done" ? (
         <section className={styles.review}>
           {errorBlock}
           {lowConfidence && !error ? (

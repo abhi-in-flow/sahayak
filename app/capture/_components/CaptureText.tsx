@@ -8,6 +8,7 @@ import { InlineNote } from "@/app/_components/InlineNote";
 import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
 import { matchesRealId } from "@/app/_lib/realId";
+import { interpretAndStore } from "@/app/_lib/agent/client";
 import { mutate, readJourney } from "@/app/_lib/storage/local";
 import { ExampleChips, type ExampleChipsStrings } from "./ExampleChips";
 import styles from "./CaptureText.module.css";
@@ -171,7 +172,9 @@ export function CaptureText({ localeCode, strings, focusOnEntry }: CaptureTextPr
     }
     save();
     setNavigating(true); // disabled on first tap (D3 S2b)
-    router.push(withLocale("/clarify/1", localeCode));
+    void interpretAndStore(textRef.current, localeCode).then(() => {
+      router.push(withLocale("/clarify/1", localeCode));
+    });
   }
 
   const showError = e16Active

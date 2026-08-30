@@ -19,6 +19,7 @@ export interface S4Strings {
   "s4.fact.registered.no": string;
   "s4.fact.state.assam": string;
   "s4.fact.state.maharashtra": string;
+  "s4.fact.state.karnataka": string;
   "s4.fact.work.company": string;
   "s4.fact.work.retired": string;
   "s4.fact.work.self": string;
@@ -48,6 +49,7 @@ export interface S4Strings {
   "s4.chip.registered.no": string;
   "s4.chip.state.assam": string;
   "s4.chip.state.maharashtra": string;
+  "s4.chip.state.karnataka": string;
   "s4.chip.work.company": string;
   "s4.chip.work.retired": string;
   "s4.chip.work.self": string;
@@ -84,6 +86,8 @@ export interface S4Strings {
   "s4.back": string;
   /** Speaker control label (A5 read-aloud). */
   "s4.speak": string;
+  /** Optional live-model card above the rule-built summary. */
+  "s4.agent.heading": string;
 }
 
 export const enS4: S4Strings = {
@@ -93,6 +97,7 @@ export const enS4: S4Strings = {
   "s4.fact.registered.no": "You told us the death has not been registered yet.",
   "s4.fact.state.assam": "They lived in Assam.",
   "s4.fact.state.maharashtra": "They lived in Maharashtra.",
+  "s4.fact.state.karnataka": "They lived in Karnataka.",
   "s4.fact.work.company": "They worked at a company.",
   "s4.fact.work.retired": "They were retired.",
   "s4.fact.work.self": "They worked for themselves.",
@@ -118,6 +123,7 @@ export const enS4: S4Strings = {
   "s4.chip.registered.no": "Registered: not yet",
   "s4.chip.state.assam": "Lived in Assam",
   "s4.chip.state.maharashtra": "Lived in Maharashtra",
+  "s4.chip.state.karnataka": "Lived in Karnataka",
   "s4.chip.work.company": "Worked at a company",
   "s4.chip.work.retired": "Was retired",
   "s4.chip.work.self": "Was self-employed",
@@ -146,6 +152,7 @@ export const enS4: S4Strings = {
   "s4.cta.wrong": "Something's wrong",
   "s4.back": "Back",
   "s4.speak": "Hear this summary",
+  "s4.agent.heading": "What the guide heard (live model)",
 };
 
 // Placeholder pending professional translation. Complete, not correct.
@@ -157,6 +164,7 @@ export const hiS4: S4Strings = {
   "s4.fact.registered.no": "आपने बताया कि मृत्यु का पंजीकरण अभी नहीं हुआ है।",
   "s4.fact.state.assam": "वे असम में रहते थे।",
   "s4.fact.state.maharashtra": "वे महाराष्ट्र में रहते थे।",
+  "s4.fact.state.karnataka": "वे कर्नाटक में रहते थे।",
   "s4.fact.work.company": "वे कंपनी में काम करते थे।",
   "s4.fact.work.retired": "वे सेवानिवृत्त हो चुके थे।",
   "s4.fact.work.self": "वे अपना काम स्वयं करते थे।",
@@ -182,6 +190,7 @@ export const hiS4: S4Strings = {
   "s4.chip.registered.no": "पंजीकृत: अभी नहीं",
   "s4.chip.state.assam": "असम में रहते थे",
   "s4.chip.state.maharashtra": "महाराष्ट्र में रहते थे",
+  "s4.chip.state.karnataka": "कर्नाटक में रहते थे",
   "s4.chip.work.company": "कंपनी में काम",
   "s4.chip.work.retired": "सेवानिवृत्त",
   "s4.chip.work.self": "स्वरोज़गार",
@@ -210,4 +219,5 @@ export const hiS4: S4Strings = {
   "s4.cta.wrong": "कुछ ग़लत है",
   "s4.back": "वापस",
   "s4.speak": "यह सारांश सुनिए",
+  "s4.agent.heading": "गाइड ने क्या सुना (लाइव मॉडल)",
 };

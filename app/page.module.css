@@ -7,8 +7,13 @@
   padding: var(--sp-5) 0 var(--sp-4);
 }
 
-/* Text only. No emblem, tricolour, Ashoka motif or .gov.in visual
-   language (D3 S1; D10 DP-2). */
+/* Product mark plus wordmark. Not a government emblem (D3 S1; D10 DP-2). */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
 .wordmark {
   font-size: var(--size-title);
   font-weight: 600;
@@ -19,7 +24,9 @@
 
 .headline {
   font-size: var(--size-display);
-  max-width: 18ch;
+  max-width: 28ch;
+  line-height: var(--lh-heading);
+  margin-top: var(--sp-2);
 }
 
 /* ---- entry island ---------------------------------------------------- */
@@ -114,6 +121,109 @@
 
 /* Mic: 88px diameter and NEVER icon-only (D3 S1). The label is part of
    the control, not a tooltip. */
+.metaRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.stateChip {
+  align-self: flex-start;
+  color: var(--accent-800);
+  font-size: var(--size-body);
+  font-weight: 600;
+  text-decoration: underline;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+}
+
+.primaryCta {
+  width: 100%;
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--accent-700);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-card);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+
+.primaryCta:disabled {
+  opacity: 0.8;
+  cursor: wait;
+}
+
+.primaryCtaListening {
+  background: var(--ink-900);
+}
+
+.ctaBars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+}
+
+.ctaBars i {
+  display: block;
+  width: 3px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  animation: cta-bar 0.85s ease-in-out infinite;
+}
+
+.ctaBars i:nth-child(1) {
+  height: 8px;
+}
+
+.ctaBars i:nth-child(2) {
+  height: 18px;
+  animation-delay: 0.12s;
+}
+
+.ctaBars i:nth-child(3) {
+  height: 12px;
+  animation-delay: 0.24s;
+}
+
+.ctaBars i:nth-child(4) {
+  height: 10px;
+  animation-delay: 0.36s;
+}
+
+@keyframes cta-bar {
+  0%,
+  100% {
+    transform: scaleY(0.45);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ctaBars i {
+    animation: none;
+  }
+}
+
+.secondaryRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+}
+
 .micButton {
   display: flex;
   flex-direction: column;
@@ -234,4 +344,173 @@
   padding: var(--sp-3) var(--sp-4);
   font-size: var(--size-meta);
   color: var(--ink-700);
+}
+
+/* ---- first-run guide, session, hub grid, ask ----------------------- */
+
+.sessionChip {
+  font-size: var(--size-body);
+  font-weight: 600;
+  color: var(--accent-800);
+  margin: 0;
+}
+
+.sessionHint {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  margin: 0;
+}
+
+.guide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.guideTitle {
+  font-size: var(--size-title);
+  font-weight: 600;
+  margin: 0;
+}
+
+.guideList {
+  margin: 0;
+  padding-left: var(--sp-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.guideList li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.guideList span {
+  color: var(--ink-700);
+  font-size: var(--size-body);
+}
+
+.guideActions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.guideDismiss {
+  min-height: var(--cta-min-height);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.guideSkip {
+  align-self: flex-start;
+  min-height: var(--target-min);
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.actionGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+}
+
+.actionCard {
+  min-height: var(--cta-min-height);
+  padding: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font-size: var(--size-body);
+  font-weight: 600;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+}
+
+.ask {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.askLabel {
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+}
+
+.askHelper {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  margin: 0;
+}
+
+.askField {
+  width: 100%;
+  min-height: 72px;
+  padding: var(--sp-3);
+  background: var(--page);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font-family: inherit;
+  font-size: var(--size-body);
+  resize: vertical;
+}
+
+.askSubmit {
+  min-height: var(--cta-min-height);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.askSubmit:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.askReply {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  background: var(--sunken);
+  border-radius: var(--radius-control);
+}
+
+.askSources {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.askSources a {
+  color: var(--accent-800);
 }

@@ -674,6 +674,7 @@ function OptionIcon({ optionId }: { optionId: string }) {
         return single("M6 6l12 12M18 6L6 18");
       case "assam":
       case "maharashtra":
+      case "karnataka":
         return (
           <>
             {single("M12 21s-6-5.1-6-10a6 6 0 1112 0c0 4.9-6 10-6 10z")}

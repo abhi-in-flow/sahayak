@@ -573,10 +573,12 @@ function SavedScreen() {
                     <span className={styles.firstBand}>{t(locale, "s9.doFirst")}</span>
                   ) : null}
                   <div className={styles.cardBody}>
+                    {nextIsDoNow ? null : (
                     <StatusChip
                       status={chipFor(nextTask, view.unknownDerived)}
                       locale={locale}
                     />
+                    )}
                     {/* Stretched link: the whole card routes to S6,
                         while the provenance link stays tappable. */}
                     <Link

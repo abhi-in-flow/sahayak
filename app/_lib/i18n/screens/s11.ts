@@ -30,6 +30,8 @@ export interface S11Strings {
   "s11.row8.note": string;
   "s11.row9.label": string;
   "s11.row9.note": string;
+  "s11.row10.label": string;
+  "s11.row10.note": string;
 
   /* ---- fact-status chip labels ---------------------------------------- */
   "s11.st.real": string;
@@ -44,9 +46,10 @@ export const enS11: S11Strings = {
   "s11.back": "Go back",
 
   "s11.row1.label": "Understanding your words (intent engine)",
-  "s11.row1.note": "A live model interprets what you say",
-  "s11.row2.label": "Voice-to-text",
-  "s11.row2.note": "Runs while you speak",
+  "s11.row1.note":
+    "A live Sarvam model interprets what you say, asks a follow-up only if needed, and builds steps from the Weaviate snapshot. If it fails, the snapshot titles still become a list.",
+  "s11.row2.label": "Voice-to-text and read-aloud",
+  "s11.row2.note": "Sarvam speech-to-text and text-to-speech. Browser speech is the fallback.",
   "s11.row3.label": "Government submissions",
   "s11.row3.note": "Nothing is ever sent to any government system",
   "s11.row4.label": "Acknowledgement numbers",
@@ -61,6 +64,9 @@ export const enS11: S11Strings = {
   "s11.row8.note": "From official sources, dated",
   "s11.row9.label": "Payments",
   "s11.row9.note": "Fees are paid on official sites only",
+  "s11.row10.label": "Civic service directory",
+  "s11.row10.note":
+    "Weaviate-indexed static snapshot from 29 Aug 2026. Not a live government system. We do not scrape .gov.in from this app.",
 
   "s11.st.real": "Real",
   "s11.st.practice": "Practice only",
@@ -74,9 +80,10 @@ export const hiS11: S11Strings = {
   "s11.back": "वापस जाएँ",
 
   "s11.row1.label": "आपकी बात समझना (इंटेंट इंजन)",
-  "s11.row1.note": "आप जो कहते हैं, उसे एक जीवंत मॉडल समझता है",
-  "s11.row2.label": "आवाज़ से टेक्स्ट",
-  "s11.row2.note": "आपके बोलते समय चलता है",
+  "s11.row1.note":
+    "एक लाइव सर्वम मॉडल आपकी बात समझता है, ज़रूरत हो तो एक सवाल पूछता है, और Weaviate स्नैपशॉट से चरण बनाता है। असफल होने पर स्नैपशॉट शीर्षक ही सूची बन जाते हैं।",
+  "s11.row2.label": "आवाज़ से टेक्स्ट और पढ़कर सुनाना",
+  "s11.row2.note": "सर्वम स्पीच-टू-टेक्स्ट और टेक्स्ट-टू-स्पीच। ब्राउज़र स्पीच फ़ॉलबैक है।",
   "s11.row3.label": "सरकारी सिस्टम में भेजना",
   "s11.row3.note": "किसी सरकारी सिस्टम में कभी कुछ नहीं भेजा जाता",
   "s11.row4.label": "पावती नंबर",
@@ -91,6 +98,9 @@ export const hiS11: S11Strings = {
   "s11.row8.note": "सरकारी स्रोतों से, तारीख के साथ",
   "s11.row9.label": "भुगतान",
   "s11.row9.note": "शुल्क सिर्फ़ सरकारी साइटों पर जमा होता है",
+  "s11.row10.label": "नागरिक सेवा निर्देशिका",
+  "s11.row10.note":
+    "29 अगस्त 2026 का Weaviate-अनुक्रमित स्थिर स्नैपशॉट। लाइव सरकारी सिस्टम नहीं। यह ऐप .gov.in से स्क्रैप नहीं करता।",
 
   "s11.st.real": "असली",
   "s11.st.practice": "सिर्फ़ अभ्यास",

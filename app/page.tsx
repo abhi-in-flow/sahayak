@@ -1,7 +1,9 @@
 import { headers } from "next/headers";
+import { BrandMark } from "@/app/_components/BrandMark";
 import { DisclosureBanner, GlobalFooter, SkipLink } from "@/app/_components/Chrome";
 import { S1Entry } from "@/app/_components/S1Entry";
-import { ENABLED_LOCALES, preferredLocale, t } from "@/app/_lib/i18n";
+import { StateGate } from "@/app/_components/StateGate";
+import { preferredLocale, t } from "@/app/_lib/i18n";
 import { TASKS, EXPECTED_TASK_COUNT, ROSTER_IS_COMPLETE } from "@/app/_lib/tasks";
 import styles from "./page.module.css";
 
@@ -33,7 +35,6 @@ export default async function S1Page({
   // The chrome renders in the pre-highlighted language until a tile is
   // tapped; the chosen locale then rides the URL and T-LOCAL.
   const locale = preferred;
-  const fromS2 = params.from === "s2";
 
   return (
     <>
@@ -42,31 +43,38 @@ export default async function S1Page({
 
       <div className="shell">
         <main id="main" className={styles.main}>
-          <p className={styles.wordmark}>{t(locale, "s1.wordmark")}</p>
+          <BrandMark variant="full" decorative wordmark={t(locale, "s1.wordmark")} />
 
-          {/* h1 is first in the page but is not focused programmatically:
-              D6 6.1 requires no focus steal on load. */}
           <h1 className={styles.headline}>{t(locale, "s1.headline")}</h1>
 
-          <S1Entry
-            localeCode={locale.code}
-            preferredCode={preferred.code}
-            fromS2={fromS2}
-            tiles={ENABLED_LOCALES.map((candidate) => ({
-              code: candidate.code,
-              endonym: candidate.endonym,
-              greeting: t(candidate, "s1.audioGreeting"),
-            }))}
-            strings={{
-              continueTitle: t(locale, "s1.continueTitle"),
-              continueDescriptor: t(locale, "s1.continueDescriptor"),
-              backToQuestion: t(locale, "s1.backToQuestion"),
-              micCta: t(locale, "s1.micCta"),
-              typeInstead: t(locale, "s1.typeInstead"),
-              audioPreviewLabel: t(locale, "s1.audioPreviewLabel"),
-              audioError: t(locale, "error.E01"),
-            }}
-          />
+          <StateGate localeCode={locale.code}>
+            <S1Entry
+              localeCode={locale.code}
+              strings={{
+                continueTitle: t(locale, "s1.continueTitle"),
+                continueDescriptor: t(locale, "s1.continueDescriptor"),
+                micCta: t(locale, "s1.micCta"),
+                micTapStop: t(locale, "s2.micTapStop"),
+                transcribing: t(locale, "s2.transcribing"),
+                typeInstead: t(locale, "s1.typeInstead"),
+                actionBrowse: t(locale, "s1.action.browse"),
+                actionLogin: t(locale, "s1.action.login"),
+                sessionIn: t(locale, "s1.session.in"),
+                sessionOut: t(locale, "s1.session.out"),
+                askLabel: t(locale, "s1.ask.label"),
+                askHelper: t(locale, "s1.ask.helper"),
+                askSubmit: t(locale, "s1.ask.submit"),
+                askWorking: t(locale, "s1.ask.working"),
+                askError: t(locale, "s1.ask.error"),
+                askSources: t(locale, "s1.ask.sources"),
+                stateChip: t(locale, "s1.state.chip"),
+                errorE02: t(locale, "s2.errorE02"),
+                errorE04: t(locale, "s2.errorE04"),
+                errorE06: t(locale, "s2.errorE06"),
+                errorInsecure: t(locale, "s2.errorInsecure"),
+              }}
+            />
+          </StateGate>
 
           <p className={styles.trustStrip}>{t(locale, "s1.trustStrip")}</p>
 

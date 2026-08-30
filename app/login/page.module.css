@@ -1,0 +1,94 @@
+/* Practice login. 360px baseline, tokens only. */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-5) 0 var(--sp-4);
+}
+
+.wordmark {
+  font-size: var(--size-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--accent-800);
+  margin: 0;
+}
+
+.headline {
+  font-size: var(--size-display);
+  max-width: 28ch;
+  line-height: var(--lh-heading);
+  margin-top: var(--sp-2);
+}
+
+.lede {
+  color: var(--ink-700);
+  font-size: var(--size-body);
+  margin: 0;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.honesty {
+  background: var(--sunken);
+  color: var(--ink-700);
+  font-size: var(--size-meta);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-control);
+}
+
+.session {
+  font-size: var(--size-body);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.input {
+  width: 100%;
+  min-height: var(--cta-min-height);
+  padding: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.primary {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tertiary {
+  align-self: flex-start;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  background: none;
+  border: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  text-decoration: underline;
+  cursor: pointer;
+}

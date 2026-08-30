@@ -1,6 +1,9 @@
 import type { LocaleDefinition, Strings } from "./types";
+import { as } from "./as";
 import { en } from "./en";
 import { hi } from "./hi";
+import { kn } from "./kn";
+import { mr } from "./mr";
 
 export type { LocaleDefinition, Strings, ScriptClass } from "./types";
 
@@ -13,7 +16,7 @@ export type { LocaleDefinition, Strings, ScriptClass } from "./types";
  * therefore a compile-time property, and ENABLED_LOCALES is safe to render
  * directly as the S1 tile list.
  */
-export const ENABLED_LOCALES: readonly LocaleDefinition[] = [en, hi];
+export const ENABLED_LOCALES: readonly LocaleDefinition[] = [en, hi, kn, mr, as];
 
 export const DEFAULT_LOCALE = en;
 

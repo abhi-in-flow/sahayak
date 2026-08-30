@@ -4,6 +4,7 @@ import { DEFAULT_LOCALE, t } from "@/app/_lib/i18n";
 import { LiveRegions } from "@/app/_components/LiveRegions";
 import { OfflineChip } from "@/app/_components/OfflineChip";
 import { ServiceWorker } from "@/app/_components/ServiceWorker";
+import { TabBar } from "@/app/_components/TabBar";
 import "./globals.css";
 
 /**
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           reconnectedMessage={t(locale, "offline.reconnected")}
         />
         {children}
+        <TabBar />
       </body>
     </html>
   );

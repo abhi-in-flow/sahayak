@@ -48,7 +48,7 @@ export const QUESTIONS: readonly QuestionDef[] = [
     id: "state",
     order: 2,
     // Q-A: two seeded states. O-D2 confirms the second.
-    options: ["assam", "maharashtra"],
+    options: ["assam", "maharashtra", "karnataka"],
     allowUnknown: false,
     multiSelect: false,
   },

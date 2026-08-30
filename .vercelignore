@@ -1,0 +1,10 @@
+extract-data-2026-08-29.json
+services-corpus.json
+certificates
+*.local
+.env
+.env.*
+docs/
+progress.md
+bugs.md
+decision.md

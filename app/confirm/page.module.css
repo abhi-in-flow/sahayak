@@ -74,6 +74,23 @@
   box-shadow: var(--shadow-card);
 }
 
+.agentCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  background: var(--sunken);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.agentHeading {
+  font-size: var(--size-meta);
+  font-weight: 600;
+  color: var(--ink-500);
+  margin: 0;
+}
+
 .summaryHead {
   display: flex;
   align-items: flex-start;

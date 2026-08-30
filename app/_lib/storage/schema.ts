@@ -15,7 +15,15 @@ export const STORAGE_KEYS = {
   journey: "sbn.journey.v1",
   locale: "sbn.locale",
   saveKey: "sbn.savekey",
+  /** Practice login session: last four digits of the invented number. */
+  session: "sbn.session",
+  /** First-run guide dismissed. */
+  onboarded: "sbn.onboarded",
+  /** Chosen state for onboarding and RAG filter. */
+  state: "sbn.state",
 } as const;
+
+export type OnboardState = "assam" | "maharashtra" | "karnataka" | "other";
 
 export const SCHEMA_VERSION = 1;
 
@@ -45,6 +53,10 @@ export interface RecordedAnswer {
 
 export interface TaskState {
   code: string;
+  /** Agent-built step. When set, Journey renders this instead of the T-roster name. */
+  title?: string;
+  detail?: string;
+  url?: string;
   status: TaskStatusKind;
   /** Set once, at S8 submit. Idempotent per draft (D4 §4.5, P2-7). */
   ackNumber: string | null;
@@ -94,6 +106,12 @@ export interface JourneyRecord {
    * true. Optional: records from before batch 3 simply have not seen one.
    */
   lastVerifiedSeen?: string;
+  /**
+   * Optional live-model interpretation from /api/agent. Absent when the
+   * rule engine ran alone. Never used as the S4 source of truth.
+   */
+  agentSummary?: string;
+  agentCitations?: { title: string; url?: string }[];
   updatedAt: string;
 }
 

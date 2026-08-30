@@ -1,18 +1,12 @@
-import { DisclosureBanner, GlobalFooter, SkipLink } from "@/app/_components/Chrome";
+import { DisclosureBanner, SkipLink } from "@/app/_components/Chrome";
+import { StateGate } from "@/app/_components/StateGate";
 import { DEFAULT_LOCALE, findLocale, t } from "@/app/_lib/i18n";
-import { CaptureText, type CaptureTextStrings } from "../_components/CaptureText";
-import styles from "./page.module.css";
+import { TalkScreen, type TalkStrings } from "../_components/TalkScreen";
+import styles from "../page.module.css";
 
-/**
- * S2b — Problem Capture (Text Fallback). D3 S2b. Full parity with S2,
- * never second-class.
- *
- * Route contract: `note=e04` (second consecutive E-04 transcription
- * failure) and `note=e05` (mic permission denied) both arrive from S2
- * with the same arrival note (D5 5.1). `mode=text` is the entry (a)
- * contract S1's "Type instead" link already ships; it turns on the
- * entry-(a) initial focus.
- */
+function firstValue(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
 
 export default async function S2bPage({
   searchParams,
@@ -20,28 +14,45 @@ export default async function S2bPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const locale = findLocale(typeof params.locale === "string" ? params.locale : undefined) ?? DEFAULT_LOCALE;
+  const locale = findLocale(firstValue(params.locale)) ?? DEFAULT_LOCALE;
+  const initialQuestion = firstValue(params.q)?.slice(0, 800) ?? "";
 
-  const note = params.note === "e04" || params.note === "e05" ? params.note : undefined;
-
-  const strings: CaptureTextStrings = {
+  const strings: TalkStrings = {
     headline: t(locale, "s2.headline"),
+    helper: t(locale, "s2.talk.helper"),
+    honesty: t(locale, "s2.talk.honesty"),
+    whatsReal: t(locale, "chrome.whatsReal"),
     chips: [t(locale, "s2.example1"), t(locale, "s2.example2"), t(locale, "s2.example3")],
     chipAsk: {
       ask: t(locale, "s2.replaceAsk"),
       yes: t(locale, "s2.replaceYes"),
       no: t(locale, "s2.replaceNo"),
     },
+    languageChange: t(locale, "s2.languageChange"),
     fieldLabel: t(locale, "s2.fieldLabel"),
-    guidance: t(locale, "s2.guidance"),
-    submit: t(locale, "s2.submit"),
-    speakInstead: t(locale, "s2.speakInstead"),
-    errorE08: t(locale, "s2.errorE08"),
-    errorE16: t(locale, "s2.errorE16"),
-    arrivalNote: note ? t(locale, "s2.noteTyping") : null,
-    // O-01 verbatim reuse: the chip text replacing "Speak instead" while
-    // offline (D3 S2b inventory).
+    typeHint: t(locale, "s2.talk.typeHint"),
+    send: t(locale, "s2.talk.send"),
+    working: t(locale, "s2.talk.working"),
+    workingSearch: t(locale, "s2.talk.workingSearch"),
+    workingMatch: t(locale, "s2.talk.workingMatch"),
+    workingWrite: t(locale, "s2.talk.workingWrite"),
+    listenAgain: t(locale, "s2.talk.listenAgain"),
+    seeSteps: t(locale, "s2.talk.seeSteps"),
+    followUp: t(locale, "s2.talk.followUp"),
+    sources: t(locale, "s2.talk.sources"),
+    micIdle: t(locale, "s2.micIdle"),
+    micTapStop: t(locale, "s2.micTapStop"),
+    micHoldStop: t(locale, "s2.micHoldStop"),
+    errorE02: t(locale, "s2.errorE02"),
+    errorE04: t(locale, "s2.errorE04"),
+    errorE06: t(locale, "s2.errorE06"),
+    errorAsk: t(locale, "s1.ask.error"),
+    errorInsecure: t(locale, "s2.errorInsecure"),
+    confirmEmptyReason: t(locale, "s2.confirmEmptyReason"),
     offlineReason: t(locale, "error.O01"),
+    a11yStarted: t(locale, "s2.a11yStarted"),
+    a11yStopped: t(locale, "s2.a11yStopped"),
+    transcribing: t(locale, "s2.transcribing"),
   };
 
   return (
@@ -50,13 +61,15 @@ export default async function S2bPage({
       <DisclosureBanner locale={locale} />
       <div className="shell">
         <main id="main" className={styles.main}>
-          <CaptureText
-            localeCode={locale.code}
-            strings={strings}
-            focusOnEntry={params.mode === "text"}
-          />
+          <StateGate localeCode={locale.code}>
+            <TalkScreen
+              localeCode={locale.code}
+              endonym={locale.endonym}
+              strings={strings}
+              initialQuestion={initialQuestion}
+            />
+          </StateGate>
         </main>
-        <GlobalFooter locale={locale} />
       </div>
     </>
   );
