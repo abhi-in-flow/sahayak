@@ -1,0 +1,132 @@
+.dock {
+  position: fixed;
+  right: var(--sp-3);
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 40;
+  width: min(28rem, calc(100vw - 1.5rem));
+  max-height: min(70dvh, 36rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--ink-900);
+  color: #f4f7f6;
+  border-radius: var(--radius-card);
+  box-shadow: 0 8px 32px rgb(0 0 0 / 0.28);
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid rgb(255 255 255 / 0.12);
+}
+
+.title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.tools {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.tools button {
+  min-height: 2rem;
+  padding: 0 0.55rem;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.body {
+  overflow: auto;
+  padding: 0.65rem 0.75rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.empty {
+  margin: 0;
+  color: rgb(255 255 255 / 0.65);
+}
+
+.turn {
+  border: 1px solid rgb(255 255 255 / 0.12);
+  border-radius: 8px;
+  padding: 0.5rem 0.55rem;
+}
+
+.turnHead {
+  margin: 0 0 0.4rem;
+  color: #9ee0d4;
+}
+
+.step {
+  margin: 0.45rem 0 0;
+  border-top: 1px solid rgb(255 255 255 / 0.08);
+  padding-top: 0.4rem;
+}
+
+.stepTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-weight: 650;
+}
+
+.ok {
+  color: #8ee0a8;
+}
+
+.skip {
+  color: #f0d27a;
+}
+
+.error {
+  color: #ff9b9b;
+}
+
+.ms {
+  color: rgb(255 255 255 / 0.45);
+  font-weight: 400;
+}
+
+.summary {
+  margin: 0.2rem 0 0.35rem;
+}
+
+.field {
+  margin: 0.35rem 0 0;
+}
+
+.field dt {
+  color: rgb(255 255 255 / 0.55);
+  font-weight: 600;
+}
+
+.field dd {
+  margin: 0.15rem 0 0;
+}
+
+.field pre {
+  margin: 0;
+  max-height: 12rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: rgb(255 255 255 / 0.06);
+  padding: 0.4rem;
+  border-radius: 6px;
+}

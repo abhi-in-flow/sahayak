@@ -11,8 +11,10 @@ import { withLocale } from "@/app/_lib/nav";
 import { toVoiceLocale } from "@/app/_lib/sarvamLang";
 import { speak, spokenReply, stopSpeaking } from "@/app/_lib/speak";
 import { persistAgentJourney } from "@/app/_lib/agent/client";
+import type { AgentDebugTrace } from "@/app/_lib/agent/trace";
 import { pickRecorderMime, transcribeAudio } from "@/app/_lib/speech/pendingStream";
 import { readState } from "@/app/_lib/storage/local";
+import { AgentDebug, type DebugTurn } from "./AgentDebug";
 import { ExampleChips, type ExampleChipsStrings } from "./ExampleChips";
 import styles from "./TalkScreen.module.css";
 
@@ -80,12 +82,14 @@ export function TalkScreen({
   strings,
   initialQuestion = "",
   autoListen = false,
+  debug = false,
 }: {
   localeCode: string;
   endonym: string;
   strings: TalkStrings;
   initialQuestion?: string;
   autoListen?: boolean;
+  debug?: boolean;
 }) {
   const [draft, setDraft] = useState(initialQuestion);
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -97,6 +101,7 @@ export function TalkScreen({
   const [sttFails, setSttFails] = useState(0);
   const [thinkIndex, setThinkIndex] = useState(0);
   const [speaking, setSpeaking] = useState(false);
+  const [debugTurns, setDebugTurns] = useState<DebugTurn[]>([]);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -183,6 +188,7 @@ export function TalkScreen({
           state: readState(),
           history,
           citations: priorCitations,
+          debug,
         }),
         signal: AbortSignal.timeout(28_000),
       });
@@ -193,8 +199,12 @@ export function TalkScreen({
         citations?: { title: string; url?: string }[];
         tasks?: { title: string; detail: string; url?: string }[];
         summary?: string;
+        debug?: AgentDebugTrace;
       };
-      const reply = data.reply?.trim() || strings.errorAsk;
+      const reply = data.reply?.trim() || "";
+      if (!reply && !data.followUp && !(data.tasks && data.tasks.length)) {
+        throw new Error("empty reply");
+      }
       const tasks = data.tasks ?? [];
       const followUp = data.followUp ?? null;
       const intentClear = tasks.length > 0 && !followUp;
@@ -202,12 +212,15 @@ export function TalkScreen({
         ...nextTurns,
         {
           role: "assistant",
-          text: reply,
+          text: reply || strings.seeSteps,
           followUp,
           citations: data.citations,
           hasTasks: intentClear,
         },
       ]);
+      if (debug && data.debug) {
+        setDebugTurns((prev) => [...prev, { question: message, trace: data.debug as AgentDebugTrace }]);
+      }
       if (intentClear) {
         persistAgentJourney({
           userText: message,
@@ -463,6 +476,7 @@ export function TalkScreen({
           </button>
         ) : null}
       </div>
+      {debug ? <AgentDebug turns={debugTurns} /> : null}
     </div>
   );
 }

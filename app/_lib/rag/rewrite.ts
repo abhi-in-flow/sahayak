@@ -6,6 +6,19 @@ export type RetrievalPlan =
   | { action: "search"; english: string; topic: SearchTopic }
   | { action: "skip"; english: ""; topic: SearchTopic };
 
+export interface QueryWriterLog {
+  source: "rules" | "llm" | "fallback";
+  isFollowUp: boolean;
+  latest: string;
+  context: string;
+  action: "search" | "skip";
+  english: string;
+  topic: SearchTopic;
+  messages?: { role: string; content: string }[];
+  raw?: string;
+  error?: string;
+}
+
 const RULES: { topic: SearchTopic; english: string; cues: string[] }[] = [
   {
     topic: "death",
@@ -71,21 +84,56 @@ function parsePlan(text: string, fallback: string): RetrievalPlan {
   return { action: "search", english: english.slice(0, 160), topic };
 }
 
+function writerLog(
+  source: QueryWriterLog["source"],
+  latest: string,
+  context: string,
+  isFollowUp: boolean,
+  plan: RetrievalPlan,
+  extra: Partial<QueryWriterLog> = {},
+): QueryWriterLog {
+  return {
+    source,
+    isFollowUp,
+    latest,
+    context,
+    action: plan.action,
+    english: plan.english,
+    topic: plan.topic,
+    ...extra,
+  };
+}
+
 /** Query-writer node: search, skip, or rewrite into English. */
 export async function planRetrieval(
   latest: string,
   context = "",
   isFollowUp = false,
-): Promise<RetrievalPlan> {
+): Promise<{ plan: RetrievalPlan; log: QueryWriterLog }> {
   const ruled = planRetrievalSync(latest, context, isFollowUp);
-  if (ruled) return ruled;
+  if (ruled) return { plan: ruled, log: writerLog("rules", latest, context, isFollowUp, ruled) };
 
   const trimmed = latest.trim();
   if (!trimmed || !hasSarvamKey()) {
-    return trimmed
+    const plan: RetrievalPlan = trimmed
       ? { action: "search", english: trimmed, topic: "other" }
       : { action: "skip", english: "", topic: "other" };
+    return { plan, log: writerLog("fallback", latest, context, isFollowUp, plan) };
   }
+
+  const messages = [
+    {
+      role: "system",
+      content:
+        "You write searches for an English government-service directory. If the person named a civic service, output:\nQUERY: death certificate\nTOPIC: death\nTOPIC must be death, bakijai, income, or other. QUERY is 2 to 6 English words.\nIf they only greeted, answered a follow-up (district, city, already applied), or did not name a service, output:\nSEARCH: NONE\nNo extra text.",
+    },
+    {
+      role: "user",
+      content: context.trim()
+        ? `Earlier: ${context.slice(0, 400)}\nLatest: ${trimmed}`
+        : trimmed,
+    },
+  ];
 
   try {
     const response = await getSarvam().chat.completions({
@@ -93,24 +141,22 @@ export async function planRetrieval(
       temperature: 0,
       max_tokens: 80,
       reasoning_effort: null as unknown as "low",
-      messages: [
-        {
-          role: "system",
-          content:
-            "You write searches for an English government-service directory. If the person named a civic service, output:\nQUERY: death certificate\nTOPIC: death\nTOPIC must be death, bakijai, income, or other. QUERY is 2 to 6 English words.\nIf they only greeted, answered a follow-up (district, city, already applied), or did not name a service, output:\nSEARCH: NONE\nNo extra text.",
-        },
-        {
-          role: "user",
-          content: context.trim()
-            ? `Earlier: ${context.slice(0, 400)}\nLatest: ${trimmed}`
-            : trimmed,
-        },
-      ],
+      messages,
     });
     const text = response.choices[0]?.message?.content?.trim() ?? "";
-    if (!text) return { action: "search", english: trimmed, topic: "other" };
-    return parsePlan(text, trimmed);
-  } catch {
-    return { action: "search", english: trimmed, topic: "other" };
+    const plan = text ? parsePlan(text, trimmed) : ({ action: "search", english: trimmed, topic: "other" } as RetrievalPlan);
+    return {
+      plan,
+      log: writerLog("llm", latest, context, isFollowUp, plan, { messages, raw: text }),
+    };
+  } catch (error) {
+    const plan: RetrievalPlan = { action: "search", english: trimmed, topic: "other" };
+    return {
+      plan,
+      log: writerLog("fallback", latest, context, isFollowUp, plan, {
+        messages,
+        error: error instanceof Error ? error.message : "query writer failed",
+      }),
+    };
   }
 }

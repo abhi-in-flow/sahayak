@@ -12,6 +12,7 @@ export async function POST(request: Request) {
     state?: string;
     history?: AgentTurn[];
     citations?: { title?: string; url?: string }[];
+    debug?: boolean;
   };
   try {
     body = (await request.json()) as typeof body;
@@ -47,6 +48,13 @@ export async function POST(request: Request) {
         }))
     : [];
 
-  const result = await runAgent(message.slice(0, 800), body.locale, state, history, priorCitations);
+  const result = await runAgent(
+    message.slice(0, 800),
+    body.locale,
+    state,
+    history,
+    priorCitations,
+    body.debug === true,
+  );
   return NextResponse.json(result);
 }

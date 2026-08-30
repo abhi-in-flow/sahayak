@@ -18,6 +18,29 @@ export interface RetrievedChunk extends CorpusChunk {
   score: number;
 }
 
+export interface RetrieveHitLog {
+  id: string;
+  title: string;
+  score: number;
+  region?: string;
+}
+
+export interface RetrieveLog {
+  action: "search" | "skip";
+  source: "weaviate" | "keyword" | "reuse" | "none";
+  query: string;
+  topicHay: string;
+  filter: string;
+  weaviateConfigured: boolean;
+  alpha?: number;
+  limit?: number;
+  error?: string;
+  rawHits: RetrieveHitLog[];
+  dropped: { title: string; reason: string }[];
+  aliases: { id: string; title: string }[];
+  final: RetrieveHitLog[];
+}
+
 const STOP = new Set([
   "the",
   "a",
@@ -191,6 +214,36 @@ function topicHay(query: string, context: string, plan: RetrievalPlan): string {
   return [query, context, plan.english, topicPhrase(plan.topic)].filter(Boolean).join(" ");
 }
 
+function hitLog(chunk: RetrievedChunk): RetrieveHitLog {
+  return { id: chunk.id, title: chunk.title, score: chunk.score, region: chunk.region };
+}
+
+function finishRetrieve(
+  chunks: RetrievedChunk[],
+  raw: RetrievedChunk[],
+  topic: string,
+  log: Omit<RetrieveLog, "dropped" | "aliases" | "final">,
+): { chunks: RetrievedChunk[]; log: RetrieveLog } {
+  const dropped = raw
+    .filter((hit) => !topicRelevant(hit, topic))
+    .map((hit) => ({ title: hit.title, reason: "topic filter" }));
+  const aliases = exampleAliasChunks(topic).map((row) => ({ id: row.id, title: row.title }));
+  return {
+    chunks,
+    log: {
+      ...log,
+      dropped,
+      aliases,
+      final: chunks.map(hitLog),
+    },
+  };
+}
+
+function regionFilter(state?: OnboardState | null): string {
+  const wanted = state && state !== "other" ? STATE_NAME[state] : "";
+  return wanted ? `${wanted} OR National` : "none";
+}
+
 /** Local seeds plus earlier citations. No Weaviate. */
 export function reuseSnapshot(
   prior: RetrievedChunk[],
@@ -202,6 +255,26 @@ export function reuseSnapshot(
   return mergeExampleAliases(prior, topicHay(query, context, plan), k);
 }
 
+export function reuseSnapshotWithLog(
+  prior: RetrievedChunk[],
+  query: string,
+  context: string,
+  plan: RetrievalPlan,
+  k = 5,
+): { chunks: RetrievedChunk[]; log: RetrieveLog } {
+  const topic = topicHay(query, context, plan);
+  const chunks = mergeExampleAliases(prior, topic, k);
+  return finishRetrieve(chunks, prior, topic, {
+    action: "skip",
+    source: "reuse",
+    query: plan.english || "(none)",
+    topicHay: topic,
+    filter: "none",
+    weaviateConfigured: hasWeaviate(),
+    rawHits: prior.map(hitLog),
+  });
+}
+
 /** Hybrid search over the Weaviate-indexed snapshot. Falls back to seeded keyword overlap. */
 export async function retrieveChunks(
   query: string,
@@ -209,7 +282,7 @@ export async function retrieveChunks(
   state?: OnboardState | null,
   context = "",
   plan?: RetrievalPlan,
-): Promise<RetrievedChunk[]> {
+): Promise<{ chunks: RetrievedChunk[]; log: RetrieveLog }> {
   const decided: RetrievalPlan = plan ?? {
     action: "search",
     english: query,
@@ -217,17 +290,37 @@ export async function retrieveChunks(
   };
   const topic = topicHay(query, context, decided);
   if (decided.action === "skip" || !decided.english.trim()) {
-    return reuseSnapshot([], query, context, decided, k);
+    return reuseSnapshotWithLog([], query, context, decided, k);
   }
   let hits: RetrievedChunk[] = [];
+  let source: RetrieveLog["source"] = "none";
+  let error: string | undefined;
+  const limit = Math.max(k * 3, 12);
   if (hasWeaviate()) {
     try {
-      hits = await retrieveFromWeaviate(decided.english, Math.max(k * 3, 12), state);
-    } catch (error) {
-      const name = error instanceof Error ? error.name : "Error";
+      hits = await retrieveFromWeaviate(decided.english, limit, state);
+      source = "weaviate";
+    } catch (caught) {
+      const name = caught instanceof Error ? caught.name : "Error";
+      error = caught instanceof Error ? caught.message : name;
       console.error("weaviate retrieve failed", name);
     }
   }
-  if (hits.length === 0) hits = keywordFallback(topic, k, state);
-  return mergeExampleAliases(hits, topic, k);
+  if (hits.length === 0) {
+    hits = keywordFallback(topic, k, state);
+    source = "keyword";
+  }
+  const chunks = mergeExampleAliases(hits, topic, k);
+  return finishRetrieve(chunks, hits, topic, {
+    action: "search",
+    source,
+    query: decided.english,
+    topicHay: topic,
+    filter: regionFilter(state),
+    weaviateConfigured: hasWeaviate(),
+    alpha: 0.25,
+    limit,
+    error,
+    rawHits: hits.map(hitLog),
+  });
 }

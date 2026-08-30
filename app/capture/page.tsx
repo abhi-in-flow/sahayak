@@ -17,6 +17,7 @@ export default async function S2Page({
   const locale = findLocale(firstValue(params.locale)) ?? DEFAULT_LOCALE;
   const initialQuestion = firstValue(params.q)?.slice(0, 800) ?? "";
   const autoListen = firstValue(params.listen) === "1";
+  const debug = firstValue(params.debug) === "1";
 
   const strings: TalkStrings = {
     headline: t(locale, "s2.headline"),
@@ -69,6 +70,7 @@ export default async function S2Page({
               strings={strings}
               initialQuestion={initialQuestion}
               autoListen={autoListen}
+              debug={debug}
             />
           </StateGate>
         </main>

@@ -1,9 +1,9 @@
-import { PromptTemplate } from "@langchain/core/prompts";
 import { getSarvam } from "../sarvam";
 import { defaultFollowUp, isStockFollowUp, languageName, localizeFollowUp, toVoiceLocale } from "../sarvamLang";
-import { retrieveChunks, reuseSnapshot, type RetrievedChunk } from "../rag/retrieve";
+import { retrieveChunks, reuseSnapshotWithLog, type RetrievedChunk } from "../rag/retrieve";
 import { planRetrieval } from "../rag/rewrite";
 import type { OnboardState } from "../storage/schema";
+import { field, makeStep, nowMs, type AgentDebugStep, type AgentDebugTrace } from "./trace";
 
 export interface AgentCitation {
   title: string;
@@ -21,6 +21,11 @@ export interface AgentTurn {
   content: string;
 }
 
+export interface ChatMessage {
+  role: "system" | "user" | "assistant";
+  content: string;
+}
+
 export interface AgentResult {
   reply: string;
   summary: string;
@@ -28,37 +33,49 @@ export interface AgentResult {
   followUp: string | null;
   tasks: AgentTaskDraft[];
   engine: "sarvam" | "fallback";
+  debug?: AgentDebugTrace;
 }
 
-const TEMPLATE = `You are Sahayak, an independent guide for Indian civic processes. You are not a government website. You never submit forms, take payments, or ask for Aadhaar, PAN, real OTP, or passwords.
+/** System + prior turns + latest user. Snapshot stays in system, not in one stuffed prompt. */
+export function buildReplyMessages(input: {
+  language: string;
+  followUpExample: string;
+  snapshot: string;
+  history: AgentTurn[];
+  question: string;
+  firstTurn: boolean;
+}): ChatMessage[] {
+  const system = [
+    "You are Sahayak, an independent civic guide for India. You are not a government website.",
+    "Never submit forms, take payments, or ask for Aadhaar, PAN, OTP, or passwords.",
+    "Use ONLY the snapshot. If a fact is missing, say you are not sure. Never invent an office, fee, URL, or service name.",
+    `Speak ${input.language} only. Write 1 to 3 short spoken sentences first, then the two trailer lines.`,
+    "Trailer format:",
+    `FOLLOWUP: ${input.followUpExample}`,
+    "TASKS: NONE",
+    "or, only after district/city and already-applied are known from this chat:",
+    "FOLLOWUP: NONE",
+    "TASKS:",
+    "- <copy a title from the snapshot> | <copy that row's url> | <one sentence from that row>",
+    "FOLLOWUP may only ask district or city, which snapshot service, or whether they already applied.",
+    input.firstTurn
+      ? "This is the first user message: ask one FOLLOWUP and set TASKS: NONE."
+      : "Do not repeat a question already answered in the messages below.",
+    "Copy TASK titles and URLs only from the snapshot. If the snapshot is about a death certificate, do not mention any other certificate or clearance.",
+    "",
+    "Snapshot (static, not a live government system):",
+    input.snapshot,
+  ].join("\n");
 
-Use ONLY the snapshot facts below. If a fact is missing, say you are not sure and point to an official URL from the snapshot. Never invent offices, fees, or URLs.
-
-Snapshot (static, collected by the team, not a live government system):
-{context}
-
-Conversation so far:
-{history}
-
-Latest from the person:
-{question}
-
-Reply in plain sentences in {language} only. FOLLOWUP and spoken sentences must be {language}. TASK titles and URLs may stay as the official English names from the snapshot. Then add these lines exactly.
-
-Allowed FOLLOWUP topics only: district or city, which listed service, or whether they already applied. Nothing else. Do not repeat a question already answered in the conversation. If Conversation so far is (none), you MUST ask one FOLLOWUP and emit TASKS: NONE.
-
-While still unclear:
-FOLLOWUP: {followUpExample}
-TASKS: NONE
-
-Once district/city and whether they applied are known:
-FOLLOWUP: NONE
-TASKS:
-- Apply for Bakijai clearance | https://sewasetu.assam.gov.in/site/service-apply/issuance-of-bakijai-clearance-certificate | Use the official Sewa Setu Assam listing
-
-The TASKS title must be the real step name, never the word Title. Every URL must come from the snapshot. While FOLLOWUP is not NONE, you MUST emit TASKS: NONE. If FOLLOWUP is NONE, you MUST emit at least one TASK (title | snapshot url | one-sentence detail). Never emit TASKS: NONE together with FOLLOWUP: NONE when the snapshot has a matching official URL. Death certificate in Assam may use the seeded registrar facts.`;
-
-const prompt = PromptTemplate.fromTemplate(TEMPLATE);
+  const messages: ChatMessage[] = [{ role: "system", content: system }];
+  for (const turn of input.history.slice(-8)) {
+    const content = turn.content.trim().slice(0, 800);
+    if (!content) continue;
+    messages.push({ role: turn.role, content });
+  }
+  messages.push({ role: "user", content: input.question.trim().slice(0, 800) });
+  return messages;
+}
 
 function chunksFromPrior(citations: AgentCitation[]): RetrievedChunk[] {
   return citations
@@ -79,73 +96,168 @@ export async function runAgent(
   state?: OnboardState | null,
   history: AgentTurn[] = [],
   priorCitations: AgentCitation[] = [],
+  collectDebug = false,
 ): Promise<AgentResult> {
+  const startedAt = new Date().toISOString();
+  const t0 = nowMs();
+  const steps: AgentDebugStep[] = [];
+
   const retrieveContext = history
     .slice(-8)
     .map((turn) => turn.content)
     .join(" ");
   const isFollowUp = history.length > 0;
-  const plan = await planRetrieval(question, retrieveContext, isFollowUp);
-  const chunks =
+  const voice = toVoiceLocale(locale);
+
+  steps.push(
+    makeStep("input", "1. Input", t0, {
+      status: "ok",
+      summary: isFollowUp ? "Follow-up turn" : "First turn",
+      fields: [
+        field("question", question),
+        field("locale", voice),
+        field("state", state ?? "none"),
+        field("follow-up", isFollowUp),
+        field("history turns", history.length),
+        field("history text", retrieveContext || "(none)"),
+        field("prior citations", priorCitations.map((cite) => cite.title)),
+      ],
+    }),
+  );
+
+  const writerStarted = nowMs();
+  const { plan, log: writerLog } = await planRetrieval(question, retrieveContext, isFollowUp);
+  steps.push(
+    makeStep("query_writer", "2. Query writer", writerStarted, {
+      status: writerLog.error ? "error" : plan.action === "skip" ? "skip" : "ok",
+      summary:
+        plan.action === "skip"
+          ? `Skip search (${writerLog.source})`
+          : `Search "${plan.english}" via ${writerLog.source}`,
+      fields: [
+        field("source", writerLog.source),
+        field("action", writerLog.action),
+        field("english query", writerLog.english || "(none)"),
+        field("topic", writerLog.topic),
+        field("writer input", writerLog.messages?.map((row) => `${row.role}: ${row.content}`).join("\n\n") ?? "(rules, no LLM)"),
+        field("writer raw output", writerLog.raw ?? "(no LLM call)"),
+        field("error", writerLog.error ?? ""),
+      ],
+    }),
+  );
+
+  const retrieveStarted = nowMs();
+  const retrieved =
     plan.action === "search"
       ? await retrieveChunks(question, 5, state, retrieveContext, plan)
-      : reuseSnapshot(chunksFromPrior(priorCitations), question, retrieveContext, plan, 5);
+      : reuseSnapshotWithLog(chunksFromPrior(priorCitations), question, retrieveContext, plan, 5);
+  const { chunks, log: retrieveLog } = retrieved;
   const citations: AgentCitation[] = chunks
     .filter((chunk) => chunk.score > 0 || chunks.every((c) => c.score === 0))
     .map((chunk) => ({ title: chunk.title, url: chunk.url || undefined }));
+
+  steps.push(
+    makeStep("retrieve", "3. Retrieve", retrieveStarted, {
+      status: retrieveLog.error ? "error" : retrieveLog.action === "skip" ? "skip" : "ok",
+      summary:
+        retrieveLog.action === "skip"
+          ? `No Weaviate call · ${retrieveLog.final.length} reused rows`
+          : `${retrieveLog.source} · query "${retrieveLog.query}" · ${retrieveLog.final.length} kept`,
+      fields: [
+        field("Weaviate query", retrieveLog.query),
+        field("source", retrieveLog.source),
+        field("configured", retrieveLog.weaviateConfigured),
+        field("alpha", retrieveLog.alpha ?? ""),
+        field("limit", retrieveLog.limit ?? ""),
+        field("filter", retrieveLog.filter),
+        field("topic haystack", retrieveLog.topicHay),
+        field("raw hits", retrieveLog.rawHits),
+        field("dropped", retrieveLog.dropped),
+        field("aliases", retrieveLog.aliases),
+        field("final snapshot", retrieveLog.final),
+        field("error", retrieveLog.error ?? ""),
+      ],
+    }),
+  );
 
   const context =
     chunks
       .map((chunk) => `- ${chunk.title} (${chunk.fetchedAt}${chunk.url ? `; ${chunk.url}` : ""}): ${chunk.text}`)
       .join("\n") || "(none)";
 
-  const historyText =
-    history
-      .slice(-8)
-      .map((turn) => `${turn.role === "user" ? "Person" : "Sahayak"}: ${turn.content}`)
-      .join("\n") || "(none)";
-
-  const voice = toVoiceLocale(locale);
-  const filled = await prompt.format({
-    context,
-    history: historyText,
-    question: `[locale ${voice}] ${question}`,
+  const messages = buildReplyMessages({
     language: languageName(voice),
     followUpExample: defaultFollowUp(voice),
+    snapshot: context,
+    history,
+    question,
+    firstTurn: !isFollowUp,
   });
 
+  const finish = (partial: Omit<AgentResult, "debug">, extra?: AgentDebugStep): AgentResult => {
+    if (extra) steps.push(extra);
+    return {
+      ...partial,
+      debug: collectDebug
+        ? { version: 1, startedAt, elapsedMs: nowMs() - t0, steps }
+        : undefined,
+    };
+  };
+
+  const replyStarted = nowMs();
   try {
     const response = await getSarvam().chat.completions({
       model: "sarvam-105b",
       temperature: 0.2,
       max_tokens: 2048,
-      reasoning_effort: null as unknown as "low",
-      messages: [
-        {
-          role: "system",
-          content: `You are Sahayak. Guidance only. Never submit. Never invent offices or fees. Speak ${languageName(voice)} only.`,
-        },
-        { role: "user", content: filled },
-      ],
+      reasoning_effort: "low",
+      messages,
     });
-    const finish = response.choices[0]?.finish_reason;
-    if (finish && finish !== "stop") {
-      console.error("sarvam chat finish_reason", finish);
+    const reason = response.choices[0]?.finish_reason;
+    if (reason && reason !== "stop") {
+      console.error("sarvam chat finish_reason", reason);
     }
     const text = response.choices[0]?.message?.content?.trim() ?? "";
     if (!text) throw new Error("empty");
     const parsedFollowUp = localizeFollowUp(parseFollowUp(text, history.length > 0), voice);
     const followUp =
       history.length === 0 ? parsedFollowUp ?? defaultFollowUp(voice) : parsedFollowUp;
-    const parsed = parseTasks(text, citations);
-    return {
-      reply: stripMeta(text),
-      summary: extractTag(text, "SUMMARY") || firstSentence(stripMeta(text)),
+    const parsed = snapshotTasks(parseTasks(text, citations), citations, followUp, history.length === 0);
+    const tasks = parsed;
+    const reply = spokenFromModel(text, tasks);
+    steps.push(
+      makeStep("reply", "4. Reply model", replyStarted, {
+        status: "ok",
+        summary: `sarvam-105b · finish ${reason ?? "stop"}`,
+        fields: [
+          field("messages", messages.map((row) => `${row.role}: ${row.content}`).join("\n---\n")),
+          field("temperature", 0.2),
+          field("reasoning_effort", "low"),
+          field("raw model output", text),
+          field("finish", reason ?? ""),
+        ],
+      }),
+    );
+    steps.push(
+      makeStep("parse", "5. Parse", nowMs(), {
+        status: "ok",
+        summary: followUp ? `FOLLOWUP open · ${tasks.length} tasks` : `FOLLOWUP none · ${tasks.length} tasks`,
+        fields: [
+          field("spoken reply", reply),
+          field("follow-up", followUp ?? "NONE"),
+          field("tasks after intent gate", tasks),
+          field("citations", citations),
+        ],
+      }),
+    );
+    return finish({
+      reply,
+      summary: extractTag(text, "SUMMARY") || firstSentence(reply),
       citations,
       followUp,
-      tasks: history.length === 0 ? [] : tasksWhenIntentClear(followUp, parsed),
+      tasks,
       engine: "sarvam",
-    };
+    });
   } catch (error) {
     const name = error instanceof Error ? error.name : "Error";
     const status =
@@ -159,15 +271,54 @@ export async function runAgent(
     const reply = fallback
       ? `From our snapshot: ${fallback.text}`
       : "I could not reach the live model. Say or type what you need and I will still use the saved directory.";
-    return {
-      reply,
-      summary: fallback?.title ?? "Guide unavailable",
-      citations,
-      followUp: null,
-      tasks: [],
-      engine: "fallback",
-    };
+    return finish(
+      {
+        reply,
+        summary: fallback?.title ?? "Guide unavailable",
+        citations,
+        followUp: null,
+        tasks: [],
+        engine: "fallback",
+      },
+      makeStep("reply", "4. Reply model", replyStarted, {
+        status: "error",
+        summary: `fallback · ${name} ${status}`.trim(),
+        fields: [
+          field("messages", messages.map((row) => `${row.role}: ${row.content}`).join("\n---\n")),
+          field("error", [name, status].filter(Boolean).join(" ")),
+        ],
+      }),
+    );
   }
+}
+
+/** Spoken line when the model emitted only FOLLOWUP/TASKS. */
+export function spokenFromModel(text: string, tasks: AgentTaskDraft[] = []): string {
+  const spoken = stripMeta(text);
+  if (spoken) return spoken;
+  const first = tasks[0];
+  if (first) return `The official next step is ${first.title}.`;
+  return "I have the official steps from our snapshot.";
+}
+
+/** Keep only snapshot URLs; if intent is clear and the model copied a wrong service, use citations. */
+export function snapshotTasks(
+  parsed: AgentTaskDraft[],
+  citations: AgentCitation[],
+  followUp: string | null,
+  firstTurn: boolean,
+): AgentTaskDraft[] {
+  if (firstTurn) return [];
+  const allowed = parsed.filter((task) => {
+    if (!task.url) return citations.some((cite) => cite.title === task.title);
+    return citations.some((cite) => cite.url === task.url);
+  });
+  const gated = tasksWhenIntentClear(followUp, allowed);
+  if (followUp || gated.length > 0) return gated;
+  return citations
+    .filter((cite) => cite.url)
+    .slice(0, 6)
+    .map((cite) => ({ title: cite.title, detail: cite.title, url: cite.url }));
 }
 
 /** Journey steps only after the model has no remaining question. */
