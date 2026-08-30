@@ -100,6 +100,19 @@ export interface BaseStrings {
   "onboard.state.karnataka": string;
   "onboard.state.other": string;
   "onboard.continue": string;
+  /* ---- multi-step onboarding flow (/onboard/[step]) ----------------- */
+  "onboard.stepOf": string;
+  "onboard.back": string;
+  "onboard.skip": string;
+  "onboard.lang.question": string;
+  "onboard.lang.helper": string;
+  "onboard.state.reason": string;
+  "onboard.account.question": string;
+  "onboard.account.signedIn": string;
+  "onboard.account.guest": string;
+  "onboard.account.withNumber": string;
+  "onboard.finish": string;
+  "onboard.saving": string;
   "s1.state.chip": string;
 
   /* ---- batch-3 stub screens (honest placeholders) ------------------ */

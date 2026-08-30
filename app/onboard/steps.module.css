@@ -1,0 +1,363 @@
+/* Shared styles for the /onboard/[step] flow. Tokens only (DECISION-007);
+   raw hex here is a defect. Motion budget per D10 10.7: the step swap is
+   M-2's cross-fade, transform and opacity only, and the global
+   prefers-reduced-motion collapse in globals.css flattens it. */
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-5) 0 var(--sp-4);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.wordmark {
+  font-size: var(--size-title);
+  font-weight: 600;
+  color: var(--accent-800);
+  margin: 0;
+}
+
+/* ---- step frame ---------------------------------------------------- */
+
+.stepBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+}
+
+.stepIn {
+  animation: step-fwd 200ms ease-out;
+}
+
+.stepBack {
+  animation: step-back 200ms ease-out;
+}
+
+@keyframes step-fwd {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes step-back {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* The per-step focus target. Focus is programmatic only; the global
+   :focus/:focus-visible rules own the outline. */
+.headline {
+  font-size: var(--size-display);
+  line-height: var(--lh-heading);
+  max-width: 28ch;
+}
+
+.helper {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  margin: 0;
+}
+
+/* ---- progress stepper ---------------------------------------------- */
+
+.stepper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.stepperLabel {
+  font-size: var(--size-meta);
+  font-weight: 500;
+  color: var(--ink-700);
+  margin: 0;
+}
+
+/* Segments are decorative (DP-4): the label above carries the state in
+   words, so the track is aria-hidden. */
+.track {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.segment {
+  height: 4px;
+  flex: 1;
+  background: var(--line-300); /* decorative only: never a border */
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.segmentFill {
+  display: block;
+  height: 100%;
+  background: var(--accent-700);
+  transform-origin: left;
+  transition: transform 200ms ease-out;
+}
+
+/* ---- selection cards (language, region) ---------------------------- */
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--sp-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.card {
+  position: relative;
+  width: 100%;
+  min-height: var(--answer-min-height);
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+  color: var(--ink-900);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cardSelected {
+  border-width: 2px;
+  border-color: var(--accent-700);
+  background: var(--accent-100);
+  /* Room for the check mark that only the selected state renders. */
+  padding-right: var(--sp-6);
+}
+
+/* The check is shape channel, not colour alone (DP-4): it appears only
+   on the selected card and carries aria-hidden because the radio input
+   already announces state. */
+.check {
+  position: absolute;
+  right: var(--sp-3);
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  color: var(--accent-800);
+}
+
+/* ---- goal chips ----------------------------------------------------- */
+
+.chipRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chip {
+  min-height: var(--target-min);
+  padding: var(--sp-3) var(--sp-4);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.chipSelected {
+  border-width: 2px;
+  border-color: var(--accent-700);
+  background: var(--accent-100);
+  color: var(--accent-800);
+  padding: calc(var(--sp-3) - 1px) calc(var(--sp-4) - 1px);
+}
+
+/* Chips wrap; they are never fixed-height pills (D10 10.4). */
+.chipLabel {
+  overflow-wrap: break-word;
+}
+
+.counter {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+  margin: 0;
+}
+
+/* ---- actions -------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: stretch;
+}
+
+.back {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cta {
+  flex: 1;
+  min-height: var(--cta-min-height);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cta:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.skip {
+  align-self: center;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  border: none;
+  background: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* A disabled control never sits silent: the reason is written below it
+   (D10 10.9). */
+.reason {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+  margin: 0;
+}
+
+/* ---- saving state ---------------------------------------------------- */
+
+.saving {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.savingLabel {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+  margin: 0;
+}
+
+/* ---- loading skeleton (first mount) ---------------------------------- */
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.skLine {
+  height: 24px;
+  width: 60%;
+}
+
+.skBlock {
+  height: 56px;
+}
+
+/* ---- account step ----------------------------------------------------- */
+
+.authStack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.sessionChip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--target-min);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--done-100);
+  border: 1px solid var(--done-700);
+  border-radius: var(--radius-control);
+  color: var(--done-700);
+  font-weight: 600;
+  margin: 0;
+}
+
+.input {
+  width: 100%;
+  min-height: var(--target-min);
+  padding: var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+}
+
+.honesty {
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+  margin: 0;
+}
+
+.tertiary {
+  align-self: flex-start;
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0 var(--sp-1);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}

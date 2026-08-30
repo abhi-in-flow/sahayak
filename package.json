@@ -33,5 +33,9 @@
     "typescript": "^5",
     "vitest": "^4.1.11"
   },
-  "description": "Voice-first guidance for Indian government processes. Independent project, not a government website."
+  "description": "Voice-first guidance for Indian government processes. Independent project, not a government website.",
+  "trustedDependencies": [
+    "protobufjs",
+    "unrs-resolver"
+  ]
 }
