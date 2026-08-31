@@ -67,10 +67,6 @@ export interface S2Strings {
   "s2.a11yStopped": string;
   "s2.transcribing": string;
 
-  /* ---- Talk loop recap (voice stage) -------------------------------- */
-  "s2.recap": string;
-  "s2.recap.title": string;
-
   /* ---- Talk loop (type or voice, then steps) ------------------------ */
   "s2.talk.helper": string;
   "s2.talk.honesty": string;
@@ -85,6 +81,9 @@ export interface S2Strings {
   "s2.talk.sources": string;
   "s2.talk.typeHint": string;
   "s2.errorInsecure": string;
+
+  /* ---- Jump to latest pill (chat transcript) ------------------------ */
+  "s2.chats.jumpLatest": string;
 }
 
 export const enS2: S2Strings = {
@@ -133,9 +132,6 @@ export const enS2: S2Strings = {
   "s2.a11yStopped": "Stopped listening.",
   "s2.transcribing": "Writing down what you said…",
 
-  "s2.recap": "Recap",
-  "s2.recap.title": "So far",
-
   "s2.talk.helper":
     "Speak or type. I will ask only if something is missing, then build your to-do list from our saved directory.",
   "s2.talk.honesty":
@@ -152,6 +148,8 @@ export const enS2: S2Strings = {
   "s2.talk.typeHint": "Type here, or tap the mic",
   "s2.errorInsecure":
     "This phone will not open the microphone on a plain http address. There is no permission popup on Wi-Fi IPs. Open Sahayak over https, or use localhost on this computer.",
+
+  "s2.chats.jumpLatest": "Jump to latest",
 };
 
 // Placeholder pending professional translation. Complete, not correct.
@@ -202,9 +200,6 @@ export const hiS2: S2Strings = {
   "s2.a11yStopped": "सुनना बंद कर दिया।",
   "s2.transcribing": "आपकी बात लिख रहे हैं…",
 
-  "s2.recap": "सारांश",
-  "s2.recap.title": "अब तक",
-
   "s2.talk.helper":
     "बोलिए या टाइप करें। कमी होने पर ही सवाल पूछूँगा, फिर हमारी सेव निर्देशिका से काम की सूची बनाऊँगा।",
   "s2.talk.honesty":
@@ -221,4 +216,6 @@ export const hiS2: S2Strings = {
   "s2.talk.typeHint": "यहाँ टाइप करें, या माइक दबाएँ",
   "s2.errorInsecure":
     "सादे http पते पर यह फ़ोन माइक्रोफ़ोन नहीं खोलेगा। वाई-फ़ाई आईपी पर अनुमति पॉपअप नहीं आता। सहायक को https पर खोलें, या इस कंप्यूटर पर localhost इस्तेमाल करें।",
+
+  "s2.chats.jumpLatest": "सबसे नीचे जाएँ",
 };

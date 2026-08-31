@@ -15,6 +15,7 @@ import {
 import { attachLevelMeter } from "@/app/_lib/voice/levelMeter";
 import { SpeechCapture } from "@/app/_lib/speech";
 import { announce } from "@/app/_lib/announce";
+import { isMuted } from "@/app/_lib/voice/mute";
 import { withLocale } from "@/app/_lib/nav";
 import { toVoiceLocale } from "@/app/_lib/sarvamLang";
 import { speak, spokenReply, stopSpeaking } from "@/app/_lib/speak";
@@ -24,11 +25,12 @@ import { pickRecorderMime, transcribeAudio } from "@/app/_lib/speech/pendingStre
 import { readState } from "@/app/_lib/storage/local";
 import { AgentDebug, type DebugTurn } from "./AgentDebug";
 import { ExampleChips, type ExampleChipsStrings } from "./ExampleChips";
-import { RecapSheet, type RecapTurn } from "./RecapSheet";
 import styles from "./TalkScreen.module.css";
 
 const MAX_RECORD_MS = 25_000;
 const THINK_MS = 2_200;
+/** Distance from the document bottom inside which new turns auto-scroll. */
+const NEAR_BOTTOM_PX = 300;
 
 export interface TalkStrings {
   headline: string;
@@ -47,9 +49,7 @@ export interface TalkStrings {
   seeSteps: string;
   followUp: string;
   sources: string;
-  recap: string;
-  recapTitle: string;
-  recapClose: string;
+  jumpLatest: string;
   errorE02: string;
   errorE04: string;
   errorE06: string;
@@ -62,7 +62,13 @@ export interface TalkStrings {
   voiceRail: VoiceRailStrings;
 }
 
-type Turn = RecapTurn & { hasTasks?: boolean };
+interface TalkTurn {
+  role: "user" | "assistant";
+  text: string;
+  followUp?: string | null;
+  citations?: { title: string; url?: string }[];
+  hasTasks?: boolean;
+}
 
 function subscribeOnline(onChange: () => void): () => void {
   window.addEventListener("online", onChange);
@@ -78,10 +84,14 @@ function isInsecureContext(): boolean {
 }
 
 /**
- * S2 voice stage (and S2b typed-first variant). Voice-first: the latest
- * assistant reply is the stage's primary element; the full turn history
- * demotes into the RecapSheet; the VoiceRail replaces the composer as
- * the persistent mic affordance.
+ * S2 voice stage (and S2b typed-first variant). Voice-first: the whole
+ * exchange renders as a chat transcript - the user's words as right-
+ * aligned bubbles, replies as left-aligned ones - and the hero
+ * (headline, helper, ExampleChips) only exists before the first turn.
+ * The VoiceRail replaces the composer as the persistent mic affordance;
+ * a jump pill appears when the reader scrolls away from the newest
+ * turn, and new turns auto-scroll only while they are already near the
+ * bottom.
  *
  * Voice pipeline (voice-corridor contract, store.ts): mic press ->
  * setVoicePhase("listening") + attachLevelMeter(stream); Web Speech
@@ -111,15 +121,15 @@ export function TalkScreen({
   typedFirst?: boolean;
 }) {
   const [draft, setDraft] = useState(initialQuestion);
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [turns, setTurns] = useState<TalkTurn[]>([]);
   const [working, setWorking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasTasks, setHasTasks] = useState(false);
   const [sttFails, setSttFails] = useState(0);
   const [thinkIndex, setThinkIndex] = useState(0);
   const [keyboardOpen, setKeyboardOpen] = useState(typedFirst);
-  const [recapOpen, setRecapOpen] = useState(false);
   const [debugTurns, setDebugTurns] = useState<DebugTurn[]>([]);
+  const [nearBottom, setNearBottom] = useState(true);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -130,6 +140,7 @@ export function TalkScreen({
   const playSeqRef = useRef(0);
   const startedRef = useRef(false);
   const listenStartedRef = useRef(false);
+  const nearBottomRef = useRef(true);
   const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
 
   const thinkStages = [strings.workingSearch, strings.workingMatch, strings.workingWrite];
@@ -165,6 +176,28 @@ export function TalkScreen({
     void startListening();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- listen once
   }, [autoListen]);
+
+  useEffect(() => {
+    // Passive listener; state moves only when the near-bottom boolean
+    // flips, never per event.
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const near = window.innerHeight + window.scrollY >= doc.scrollHeight - NEAR_BOTTOM_PX;
+      if (near !== nearBottomRef.current) {
+        nearBottomRef.current = near;
+        setNearBottom(near);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    // Follow new turns only while the reader is already near the
+    // bottom, and with default (instant) behavior - never smooth.
+    if (!nearBottom || turns.length === 0) return;
+    window.scrollTo({ top: document.documentElement.scrollHeight });
+  }, [turns, working, nearBottom]);
 
   /** Rail cancel / unmount / mode switch: release everything WITHOUT
    *  transcribing. Touches only refs and the voice store, so it is safe
@@ -293,16 +326,26 @@ export function TalkScreen({
     setError(null);
     setThinkIndex(0);
     setWorking(true);
+    // Typed sends own their rail state: without this the phase stays
+    // "idle", the rail keeps rendering the mic branch, and the rotating
+    // thinkingDetail prop is never shown (only finishRecording used to
+    // set it, on the voice path).
+    setVoicePhase("thinking");
     stopSpeaking();
 
-    const history = turns.map((turn) => ({
+    // The server keeps only the last 8 history entries (route.ts,
+    // run.ts), so send at most that many and the server slice becomes
+    // an identity: the first turn rides along for narrative grounding,
+    // the other 7 are the most recent.
+    const capped = turns.length <= 7 ? turns : [turns[0], ...turns.slice(-7)];
+    const history = capped.map((turn) => ({
       role: turn.role,
-      content: turn.followUp ? `${turn.text}\n${turn.followUp}` : turn.text,
+      content: (turn.text + (turn.followUp ? `\n${turn.followUp}` : "")).slice(0, 800),
     }));
-    const priorCitations = [...turns]
-      .reverse()
-      .find((turn) => turn.role === "assistant" && turn.citations?.length)?.citations ?? [];
-    const nextTurns: Turn[] = [...turns, { role: "user", text: message }];
+    const priorCitations =
+      [...capped].reverse().find((turn) => turn.role === "assistant" && turn.citations?.length)
+        ?.citations ?? [];
+    const nextTurns: TalkTurn[] = [...turns, { role: "user", text: message }];
     setTurns(nextTurns);
 
     try {
@@ -335,6 +378,7 @@ export function TalkScreen({
       const tasks = data.tasks ?? [];
       const followUp = data.followUp ?? null;
       const intentClear = tasks.length > 0 && !followUp;
+      const spoken = spokenReply(reply, followUp);
       setTurns([
         ...nextTurns,
         {
@@ -345,6 +389,12 @@ export function TalkScreen({
           hasTasks: intentClear,
         },
       ]);
+      // One announcement channel. Muted: announce() here (speak() will
+      // no-op anyway). Unmuted: playReply announces only when speak()
+      // really fails. There is no !online branch - offline, speak()
+      // falls through to the browser synthesis fallback, and announcing
+      // there would double-deliver the reply.
+      if (isMuted()) announce(spoken);
       if (debug && data.debug) {
         setDebugTurns((prev) => [...prev, { question: message, trace: data.debug as AgentDebugTrace }]);
       }
@@ -359,7 +409,7 @@ export function TalkScreen({
         setHasTasks(true);
       }
       setWorking(false);
-      await playReply(spokenReply(reply, followUp));
+      await playReply(spoken);
     } catch {
       setError(strings.errorAsk);
       setTurns(nextTurns);
@@ -375,7 +425,11 @@ export function TalkScreen({
     const seq = ++playSeqRef.current;
     setVoicePhase("speaking");
     try {
-      await speak(text, toVoiceLocale(localeCode));
+      // A mute flipped mid-playback resolves true, so neither channel
+      // delivers the tail - accepted; the toggle click is the user's
+      // own signal that speech stopped.
+      const ok = await speak(text, toVoiceLocale(localeCode));
+      if (!ok) announce(text);
     } finally {
       if (seq === playSeqRef.current) setVoicePhase("idle");
     }
@@ -396,7 +450,11 @@ export function TalkScreen({
   }
 
   const lastAssistant = [...turns].reverse().find((turn) => turn.role === "assistant");
-  const inConversation = Boolean(lastAssistant);
+  // Any turn flips the view, not just an assistant one: the hero must
+  // clear the instant the user sends, while the reply is still in
+  // flight. setWorking and setTurns batch into one render, so
+  // turns.length already covers the pending state.
+  const inConversation = turns.length > 0;
 
   return (
     <div className={`${styles.wrap} ${inConversation ? styles.wrapTalking : ""}`}>
@@ -431,18 +489,44 @@ export function TalkScreen({
           />
         </>
       ) : (
-        <div className={styles.stage} aria-live="polite">
-          {lastAssistant ? (
-            <>
-              <p className={styles.question}>{lastAssistant.text}</p>
-              {lastAssistant.followUp ? (
-                <p className={styles.stageFollowUp}>
-                  {strings.followUp} {lastAssistant.followUp}
-                </p>
-              ) : null}
-            </>
-          ) : null}
-        </div>
+        <ul className={styles.transcript}>
+          {turns.map((turn, index) =>
+            turn.role === "user" ? (
+              <li key={index} className={styles.turnUser}>
+                <p className={styles.turnText}>{turn.text}</p>
+              </li>
+            ) : (
+              <li key={index} className={styles.turnAssistant}>
+                <p className={styles.turnText}>{turn.text}</p>
+                {turn.followUp ? (
+                  <p className={styles.turnFollowUp}>
+                    {strings.followUp} {turn.followUp}
+                  </p>
+                ) : null}
+                {turn.citations?.length ? (
+                  <details className={styles.sources}>
+                    <summary className={styles.sourcesTitle}>
+                      {strings.sources} ({turn.citations.length})
+                    </summary>
+                    <ol className={styles.sourcesList}>
+                      {turn.citations.map((cite, citeIndex) => (
+                        <li key={`${cite.title}-${citeIndex}`} className={styles.sourcesItem}>
+                          {cite.url ? (
+                            <a href={cite.url} target="_blank" rel="noopener">
+                              {cite.title}
+                            </a>
+                          ) : (
+                            <span>{cite.title}</span>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
+                ) : null}
+              </li>
+            ),
+          )}
+        </ul>
       )}
 
       <div className={styles.dock}>
@@ -451,11 +535,6 @@ export function TalkScreen({
           <Link href={withLocale("/journey", localeCode)} className={`${styles.seeSteps} pressable`}>
             {strings.seeSteps}
           </Link>
-        ) : null}
-        {turns.length > 0 ? (
-          <button type="button" className={styles.recapBtn} onClick={() => setRecapOpen(true)}>
-            {strings.recap}
-          </button>
         ) : null}
         {keyboardOpen ? (
           <div className={styles.typeRow}>
@@ -494,6 +573,16 @@ export function TalkScreen({
         ) : null}
       </div>
 
+      {inConversation && !nearBottom ? (
+        <button
+          type="button"
+          className={styles.jumpPill}
+          onClick={() => window.scrollTo({ top: document.documentElement.scrollHeight })}
+        >
+          {strings.jumpLatest}
+        </button>
+      ) : null}
+
       <VoiceRail
         strings={strings.voiceRail}
         onStart={() => void startListening()}
@@ -509,18 +598,6 @@ export function TalkScreen({
         thinkingDetail={working ? thinkStages[thinkIndex] : undefined}
         disabled={!online || working}
         disabledReason={!online ? strings.offlineReason : undefined}
-      />
-
-      <RecapSheet
-        open={recapOpen}
-        onClose={() => setRecapOpen(false)}
-        turns={turns}
-        strings={{
-          title: strings.recapTitle,
-          close: strings.recapClose,
-          followUp: strings.followUp,
-          sources: strings.sources,
-        }}
       />
 
       {debug ? <AgentDebug turns={debugTurns} /> : null}
