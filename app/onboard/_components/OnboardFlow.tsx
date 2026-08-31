@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { clearSession, readSessionLast4, readState, writeLocale, writeOnboarded, writeState } from "@/app/_lib/storage/local";
 import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
+import { BrandSplash, splashBeatRemaining } from "@/app/_components/BrandSplash";
 import {
   ONBOARD_STEPS,
   canContinue,
@@ -109,7 +110,6 @@ export function OnboardFlow({
   const [last4, setLast4] = useState<string | null>(null);
 
   const savingRef = useRef(false);
-  const hydratedRef = useRef(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   const locale = draft.locale ?? urlLocale;
@@ -118,55 +118,71 @@ export function OnboardFlow({
   /* hydration + entry guards                                        */
   /* -------------------------------------------------------------- */
 
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    // Seed the draft: sessionStorage draft wins; an already-onboarded
-    // user editing via the state chip keeps their stored region.
-    const stored = readDraft();
-    const seeded = stored ?? {
-      ...emptyDraft(urlLocale),
-      region: readState(),
+    // The brand splash holds its one beat on a page load before the
+    // flow enters, so a direct load onto a step shows the logo, not a
+    // skeleton flash. In-tab step changes find the beat already spent.
+    const enter = () => {
+      // Seed the draft: sessionStorage draft wins; an already-onboarded
+      // user editing via the state chip keeps their stored region.
+      const stored = readDraft();
+      const seeded = stored ?? {
+        ...emptyDraft(urlLocale),
+        region: readState(),
+      };
+      if (seeded.locale === null) seeded.locale = urlLocale;
+      dispatch({ type: "hydrate", draft: seeded });
+
+      setLast4(readSessionLast4());
+
+      // Resume and prerequisite guards run once per session, not once per
+      // mount: every step change remounts this component, and a guard
+      // that re-ran would bounce any backward navigation straight back
+      // to the furthest step. On the very first entry (a page load) they
+      // apply in full: a returning user lands on the furthest step they
+      // reached, and the account step assumes a region.
+      if (!resumeGuardRan) {
+        resumeGuardRan = true;
+        if (seeded.furthest > step) {
+          router.replace(withLocale(`/onboard/${seeded.furthest}`, seeded.locale ?? urlLocale));
+          return;
+        }
+        const prerequisite = missingPrerequisite(step, seeded);
+        if (prerequisite !== null && prerequisite !== step) {
+          router.replace(withLocale(`/onboard/${prerequisite}`, seeded.locale ?? urlLocale));
+          return;
+        }
+      }
+
+      // Direction of the step transition, derived from where the flow
+      // last rendered in this tab before the remount.
+      if (lastEnteredStep !== null && lastEnteredStep !== step) {
+        setDirection(step < lastEnteredStep ? "back" : "fwd");
+      }
+      setPhase("ready");
     };
-    if (seeded.locale === null) seeded.locale = urlLocale;
-    dispatch({ type: "hydrate", draft: seeded });
-    hydratedRef.current = true;
 
-    setLast4(readSessionLast4());
-
-    // Resume and prerequisite guards run once per session, not once per
-    // mount: every step change remounts this component, and a guard
-    // that re-ran would bounce any backward navigation straight back
-    // to the furthest step. On the very first entry (a page load) they
-    // apply in full: a returning user lands on the furthest step they
-    // reached, and the account step assumes a region.
-    if (!resumeGuardRan) {
-      resumeGuardRan = true;
-      if (seeded.furthest > step) {
-        router.replace(withLocale(`/onboard/${seeded.furthest}`, seeded.locale ?? urlLocale));
-        return;
-      }
-      const prerequisite = missingPrerequisite(step, seeded);
-      if (prerequisite !== null && prerequisite !== step) {
-        router.replace(withLocale(`/onboard/${prerequisite}`, seeded.locale ?? urlLocale));
-        return;
-      }
+    const beat = splashBeatRemaining();
+    if (beat === 0) {
+      enter();
+      return;
     }
-
-    // Direction of the step transition, derived from where the flow
-    // last rendered in this tab before the remount.
-    if (lastEnteredStep !== null && lastEnteredStep !== step) {
-      setDirection(step < lastEnteredStep ? "back" : "fwd");
-    }
-    setPhase("ready");
+    const timer = setTimeout(enter, beat);
+    return () => clearTimeout(timer);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- per-entry by design
-  /* eslint-enable react-hooks/set-state-in-effect */
 
   /* P2: the mirror is written on every mutation, never on an explicit
-     save; the guard keeps the pre-hydration initial state out of it. */
+     save. The guard is phase (state), not a ref: this effect's first run
+     closes over the pre-hydration draft, and a ref flips to true before
+     that run executes, so a ref guard let the initial draft overwrite
+     the stored one on every step remount (and StrictMode's second
+     hydration pass then re-read the wiped draft). Phase only reaches
+     "ready" from enter(), after hydrate has re-rendered, so every write
+     here carries a hydrated draft. */
   useEffect(() => {
-    if (!hydratedRef.current) return;
+    if (phase !== "ready") return;
     writeDraft(draft);
-  }, [draft]);
+  }, [draft, phase]);
 
   /* -------------------------------------------------------------- */
   /* step entry: focus the heading, announce the position (D6 6.2)   */
@@ -286,16 +302,7 @@ export function OnboardFlow({
     .replace("{total}", String(TOTAL_STEPS));
 
   if (phase === "loading") {
-    return (
-      <div className={styles.main} aria-busy="true">
-        <div className={styles.loading}>
-          <div className={`skeleton ${styles.skLine}`} />
-          <div className={`skeleton ${styles.skBlock}`} />
-          <div className={`skeleton ${styles.skBlock}`} />
-          <div className={`skeleton ${styles.skBlock}`} />
-        </div>
-      </div>
-    );
+    return <BrandSplash />;
   }
 
   return (
