@@ -3,6 +3,7 @@ import { DisclosureBanner, GlobalFooter, SkipLink } from "@/app/_components/Chro
 import { DEFAULT_LOCALE, ENABLED_LOCALES, findLocale, t } from "@/app/_lib/i18n";
 import type { S3Strings } from "@/app/_lib/i18n/screens/s3";
 import { QUESTIONS, type QuestionId } from "@/app/_lib/journey/compute";
+import { voiceRailStrings } from "@/app/_lib/voice/strings";
 import { ClarifyLoop } from "../_components/ClarifyLoop";
 import styles from "./page.module.css";
 
@@ -107,6 +108,7 @@ export default async function S3QuestionPage({ params, searchParams }: PageProps
       <div className="shell">
         <main id="main" className={styles.main}>
           <ClarifyLoop
+            key={question.id}
             localeCode={locale.code}
             step={order}
             questionId={question.id}
@@ -128,11 +130,15 @@ export default async function S3QuestionPage({ params, searchParams }: PageProps
             backLabel={t(locale, "s3.back")}
             micOfflineReason={t(locale, "error.O01")}
             audioError={t(locale, "error.E01")}
-            micLabels={{
-              idle: t(locale, "s3.micIdle"),
-              tapStop: t(locale, "s3.micTapStop"),
-              holdStop: t(locale, "s3.micHoldStop"),
+            railStrings={{
+              // The rail's idle label names this screen's job: an answer,
+              // not a fresh capture. Chrome strings stay the shared ones.
+              ...voiceRailStrings(locale),
+              micIdle: t(locale, "s3.micIdle"),
             }}
+            corridorDetail={t(locale, "s3.corridorDetail", { n: order, total: QUESTIONS.length })}
+            echoHeard={t(locale, "s3.echo.heard")}
+            echoAnswer={t(locale, "s3.echo.answer")}
             didYouMean={t(locale, "s3.didYouMean")}
             e09Message={t(locale, "s3.e09")}
             e03Message={t(locale, "s3.e03.message")}

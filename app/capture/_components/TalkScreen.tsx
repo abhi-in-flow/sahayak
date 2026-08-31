@@ -4,8 +4,16 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/app/_components/BrandMark";
 import { InlineNote } from "@/app/_components/InlineNote";
-import { MicButton } from "@/app/_components/MicButton";
-import { Info, Send, Volume2 } from "lucide-react";
+import { Info, Send } from "lucide-react";
+import { VoiceRail, type VoiceRailStrings } from "@/app/_components/VoiceRail";
+import {
+  getVoiceSnapshot,
+  setVoiceInterim,
+  setVoicePhase,
+  setVoiceStep,
+} from "@/app/_lib/voice/store";
+import { attachLevelMeter } from "@/app/_lib/voice/levelMeter";
+import { SpeechCapture } from "@/app/_lib/speech";
 import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
 import { toVoiceLocale } from "@/app/_lib/sarvamLang";
@@ -16,6 +24,7 @@ import { pickRecorderMime, transcribeAudio } from "@/app/_lib/speech/pendingStre
 import { readState } from "@/app/_lib/storage/local";
 import { AgentDebug, type DebugTurn } from "./AgentDebug";
 import { ExampleChips, type ExampleChipsStrings } from "./ExampleChips";
+import { RecapSheet, type RecapTurn } from "./RecapSheet";
 import styles from "./TalkScreen.module.css";
 
 const MAX_RECORD_MS = 25_000;
@@ -32,17 +41,15 @@ export interface TalkStrings {
   fieldLabel: string;
   typeHint: string;
   send: string;
-  working: string;
   workingSearch: string;
   workingMatch: string;
   workingWrite: string;
-  listenAgain: string;
   seeSteps: string;
   followUp: string;
   sources: string;
-  micIdle: string;
-  micTapStop: string;
-  micHoldStop: string;
+  recap: string;
+  recapTitle: string;
+  recapClose: string;
   errorE02: string;
   errorE04: string;
   errorE06: string;
@@ -52,16 +59,10 @@ export interface TalkStrings {
   offlineReason: string;
   a11yStarted: string;
   a11yStopped: string;
-  transcribing: string;
+  voiceRail: VoiceRailStrings;
 }
 
-type Turn = {
-  role: "user" | "assistant";
-  text: string;
-  followUp?: string | null;
-  citations?: { title: string; url?: string }[];
-  hasTasks?: boolean;
-};
+type Turn = RecapTurn & { hasTasks?: boolean };
 
 function subscribeOnline(onChange: () => void): () => void {
   window.addEventListener("online", onChange);
@@ -76,6 +77,21 @@ function isInsecureContext(): boolean {
   return typeof window !== "undefined" && !window.isSecureContext;
 }
 
+/**
+ * S2 voice stage (and S2b typed-first variant). Voice-first: the latest
+ * assistant reply is the stage's primary element; the full turn history
+ * demotes into the RecapSheet; the VoiceRail replaces the composer as
+ * the persistent mic affordance.
+ *
+ * Voice pipeline (voice-corridor contract, store.ts): mic press ->
+ * setVoicePhase("listening") + attachLevelMeter(stream); Web Speech
+ * partials -> setVoiceInterim (ghost caption, display-only); stop ->
+ * "transcribing" (interim held); Sarvam transcript -> interim cleared +
+ * "thinking"; reply renders -> "speaking" -> "idle" after playback.
+ * Phase/level live only in the store - the rail is their sole reader -
+ * so this component reads getVoiceSnapshot() synchronously for guards
+ * and never mirrors phase into React state.
+ */
 export function TalkScreen({
   localeCode,
   endonym,
@@ -83,6 +99,7 @@ export function TalkScreen({
   initialQuestion = "",
   autoListen = false,
   debug = false,
+  typedFirst = false,
 }: {
   localeCode: string;
   endonym: string;
@@ -90,39 +107,43 @@ export function TalkScreen({
   initialQuestion?: string;
   autoListen?: boolean;
   debug?: boolean;
+  /** S2b: the typed field is persistent and the rail has no keyboard toggle. */
+  typedFirst?: boolean;
 }) {
   const [draft, setDraft] = useState(initialQuestion);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [working, setWorking] = useState(false);
-  const [listening, setListening] = useState(false);
-  const [transcribing, setTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasTasks, setHasTasks] = useState(false);
   const [sttFails, setSttFails] = useState(0);
   const [thinkIndex, setThinkIndex] = useState(0);
-  const [speaking, setSpeaking] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(typedFirst);
+  const [recapOpen, setRecapOpen] = useState(false);
   const [debugTurns, setDebugTurns] = useState<DebugTurn[]>([]);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const meterTeardownRef = useRef<(() => void) | null>(null);
+  const speechRef = useRef<SpeechCapture | null>(null);
   const stopTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const playSeqRef = useRef(0);
   const startedRef = useRef(false);
   const listenStartedRef = useRef(false);
-  const listRef = useRef<HTMLDivElement | null>(null);
   const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
 
   const thinkStages = [strings.workingSearch, strings.workingMatch, strings.workingWrite];
 
   useEffect(() => {
-    listRef.current?.lastElementChild?.scrollIntoView({ block: "end" });
-  }, [turns, working, transcribing, listening]);
+    setVoiceStep({ id: "speak" });
+    return () => {
+      cancelCapture();
+      setVoiceStep(null);
+    };
+  }, []);
 
   useEffect(() => {
-    if (!working) {
-      setThinkIndex(0);
-      return;
-    }
+    if (!working) return;
     const id = window.setInterval(() => {
       setThinkIndex((index) => (index + 1) % thinkStages.length);
     }, THINK_MS);
@@ -145,19 +166,124 @@ export function TalkScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- listen once
   }, [autoListen]);
 
-  useEffect(() => () => stopCapture(), []);
+  /** Rail cancel / unmount / mode switch: release everything WITHOUT
+   *  transcribing. Touches only refs and the voice store, so it is safe
+   *  to call from the unmount cleanup. */
+  function cancelCapture() {
+    if (stopTimerRef.current) {
+      clearTimeout(stopTimerRef.current);
+      stopTimerRef.current = null;
+    }
+    const recorder = recorderRef.current;
+    if (recorder && recorder.state !== "inactive") {
+      recorder.ondataavailable = null;
+      recorder.onstop = null; // discard: this path never transcribes
+      recorder.stop();
+    }
+    recorderRef.current = null;
+    chunksRef.current = [];
+    streamRef.current?.getTracks().forEach((track) => track.stop());
+    streamRef.current = null;
+    meterTeardownRef.current?.();
+    meterTeardownRef.current = null;
+    speechRef.current?.abort();
+    speechRef.current = null;
+    setVoiceInterim("");
+    setVoicePhase("idle");
+  }
 
+  /** Rail stop (tap/hold release and the 25s cap): stop the recorder and
+   *  transcribe. The interim caption stays visible until the final
+   *  transcript lands, per the corridor contract. */
   function stopCapture() {
     if (stopTimerRef.current) {
       clearTimeout(stopTimerRef.current);
       stopTimerRef.current = null;
     }
     const recorder = recorderRef.current;
-    if (recorder && recorder.state !== "inactive") recorder.stop();
+    if (recorder && recorder.state !== "inactive") {
+      setVoicePhase("transcribing");
+      recorder.stop(); // onstop -> finishRecording
+    }
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
     recorderRef.current = null;
-    setListening(false);
+    meterTeardownRef.current?.();
+    meterTeardownRef.current = null;
+    speechRef.current?.stop();
+    speechRef.current = null;
+  }
+
+  async function finishRecording() {
+    announce(strings.a11yStopped);
+    const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || "audio/webm" });
+    chunksRef.current = [];
+    const transcript = await transcribeAudio(blob, toVoiceLocale(localeCode));
+    setVoiceInterim("");
+    if (transcript === "") {
+      setVoicePhase("idle");
+      setError(strings.errorE02);
+      return;
+    }
+    if (transcript === null) {
+      const next = sttFails + 1;
+      setSttFails(next);
+      setVoicePhase("idle");
+      setError(strings.errorE04);
+      return;
+    }
+    setSttFails(0);
+    setVoicePhase("thinking");
+    await send(transcript, "voice");
+  }
+
+  async function startListening() {
+    if (!online || working || getVoiceSnapshot().phase === "listening") return;
+    setError(null);
+    stopSpeaking();
+    if (isInsecureContext()) {
+      setError(strings.errorInsecure);
+      return;
+    }
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setError(strings.errorE06);
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      meterTeardownRef.current = attachLevelMeter(stream);
+      setVoicePhase("listening");
+      // Web Speech runs alongside the recorder to feed the rail's ghost
+      // caption only. Its finals are display-only and never sent: the
+      // Sarvam transcription of the recorded blob stays the source of
+      // truth. If the API is missing or errors, capture proceeds and
+      // the caption simply never fills.
+      const speech = new SpeechCapture();
+      speechRef.current = speech;
+      speech.start(toVoiceLocale(localeCode), {
+        onPartial: (text) => setVoiceInterim(text),
+        onFinal: () => {},
+        onError: () => {},
+        onEnd: () => {},
+      });
+      const mime = pickRecorderMime();
+      const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      recorderRef.current = recorder;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) chunksRef.current.push(event.data);
+      };
+      recorder.onstop = () => {
+        void finishRecording();
+      };
+      recorder.start();
+      announce(strings.a11yStarted);
+      stopTimerRef.current = setTimeout(() => stopCapture(), MAX_RECORD_MS);
+    } catch {
+      cancelCapture();
+      setError(isInsecureContext() ? strings.errorInsecure : strings.errorE06);
+    }
   }
 
   async function send(text: string, mode: "voice" | "text") {
@@ -165,6 +291,7 @@ export function TalkScreen({
     if (!message || working) return;
     setDraft("");
     setError(null);
+    setThinkIndex(0);
     setWorking(true);
     stopSpeaking();
 
@@ -237,84 +364,42 @@ export function TalkScreen({
       setError(strings.errorAsk);
       setTurns(nextTurns);
       setWorking(false);
+      setVoicePhase("idle");
     }
   }
 
+  /** Play a reply aloud and carry the rail through speaking -> idle.
+   *  The sequence guard keeps a stale playback end from pulling the rail
+   *  out of "speaking" while a replay is still running. */
   async function playReply(text: string) {
-    setSpeaking(true);
+    const seq = ++playSeqRef.current;
+    setVoicePhase("speaking");
     try {
       await speak(text, toVoiceLocale(localeCode));
     } finally {
-      setSpeaking(false);
+      if (seq === playSeqRef.current) setVoicePhase("idle");
     }
   }
 
-  async function startListening() {
-    if (!online || working || listening) return;
-    setError(null);
-    stopSpeaking();
-    setSpeaking(false);
-    if (isInsecureContext()) {
-      setError(strings.errorInsecure);
-      return;
-    }
-    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError(isInsecureContext() ? strings.errorInsecure : strings.errorE06);
-      return;
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      chunksRef.current = [];
-      const mime = pickRecorderMime();
-      const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
-      recorderRef.current = recorder;
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) chunksRef.current.push(event.data);
-      };
-      recorder.onstop = () => {
-        void finishRecording();
-      };
-      recorder.start();
-      setListening(true);
-      announce(strings.a11yStarted);
-      stopTimerRef.current = setTimeout(() => stopCapture(), MAX_RECORD_MS);
-    } catch {
-      setError(isInsecureContext() ? strings.errorInsecure : strings.errorE06);
-    }
+  /** Typed or example entry. A live capture yields to the keyboard path;
+   *  while transcription is in flight the tap is dropped (momentary). */
+  function sendTextNow(text: string) {
+    const phase = getVoiceSnapshot().phase;
+    if (phase === "transcribing") return;
+    if (phase === "listening") cancelCapture();
+    void send(text, "text");
   }
 
-  async function finishRecording() {
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    streamRef.current = null;
-    setListening(false);
-    announce(strings.a11yStopped);
-    const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || "audio/webm" });
-    chunksRef.current = [];
-    setTranscribing(true);
-    const transcript = await transcribeAudio(blob, toVoiceLocale(localeCode));
-    setTranscribing(false);
-    if (transcript === "") {
-      setError(strings.errorE02);
-      return;
-    }
-    if (transcript === null) {
-      const next = sttFails + 1;
-      setSttFails(next);
-      setError(strings.errorE04);
-      return;
-    }
-    setSttFails(0);
-    await send(transcript, "voice");
+  function toggleKeyboard() {
+    if (getVoiceSnapshot().phase === "listening") cancelCapture();
+    setKeyboardOpen((open) => !open);
   }
 
   const lastAssistant = [...turns].reverse().find((turn) => turn.role === "assistant");
-  const inConversation = turns.length > 0 || working || listening || transcribing;
+  const inConversation = Boolean(lastAssistant);
 
   return (
-    <div
-      className={`${styles.wrap} ${inConversation ? styles.wrapTalking : ""} ${speaking ? styles.wrapSpeaking : ""}`}
-    >
+    <div className={`${styles.wrap} ${inConversation ? styles.wrapTalking : ""}`}>
       <div className={styles.topRow}>
         <BrandMark variant="icon" decorative />
         <div className={styles.topActions}>
@@ -341,141 +426,103 @@ export function TalkScreen({
           <ExampleChips
             chips={strings.chips}
             hasContent={false}
-            onPick={(example) => {
-              void send(example, "text");
-            }}
+            onPick={(example) => sendTextNow(example)}
             strings={strings.chipAsk}
           />
         </>
       ) : (
-        <p className={styles.liveTitle}>{strings.headline}</p>
+        <div className={styles.stage} aria-live="polite">
+          {lastAssistant ? (
+            <>
+              <p className={styles.question}>{lastAssistant.text}</p>
+              {lastAssistant.followUp ? (
+                <p className={styles.stageFollowUp}>
+                  {strings.followUp} {lastAssistant.followUp}
+                </p>
+              ) : null}
+            </>
+          ) : null}
+        </div>
       )}
 
-      <div className={styles.thread} ref={listRef} aria-live="polite">
-        {turns.map((turn, index) => (
-          <article
-            key={`${turn.role}-${index}`}
-            className={turn.role === "user" ? styles.user : styles.assistant}
-          >
-            <p className={styles.bubbleText}>{turn.text}</p>
-            {turn.followUp ? (
-              <p className={styles.followUp}>
-                {strings.followUp} {turn.followUp}
-              </p>
-            ) : null}
-            {turn.citations && turn.citations.length > 0 ? (
-              <details className={styles.results}>
-                <summary className={styles.resultsTitle}>
-                  {strings.sources} ({turn.citations.length})
-                </summary>
-                <ol className={styles.resultsList}>
-                  {turn.citations.map((cite, citeIndex) => (
-                    <li key={`${cite.title}-${citeIndex}`} className={styles.resultItem}>
-                      {cite.url ? (
-                        <a href={cite.url} rel="noopener noreferrer">
-                          {cite.title}
-                        </a>
-                      ) : (
-                        <span>{cite.title}</span>
-                      )}
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            ) : null}
-          </article>
-        ))}
-        {listening ? (
-          <p className={styles.listeningNote} aria-live="polite">
-            {strings.a11yStarted}
-          </p>
-        ) : null}
-        {working || transcribing ? (
-          <div className={styles.thinking} aria-busy="true" aria-live="polite">
-            <div className={styles.thinkMeta}>
-              <span className={styles.thinkDots} aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-              <p className={styles.thinkLabel}>
-                {transcribing ? strings.transcribing : thinkStages[thinkIndex]}
-              </p>
-            </div>
-            <div className={styles.thinkLines} aria-hidden="true">
-              <span className={styles.thinkLine} />
-              <span className={`${styles.thinkLine} ${styles.thinkLineMid}`} />
-              <span className={`${styles.thinkLine} ${styles.thinkLineShort}`} />
-            </div>
-          </div>
-        ) : null}
+      <div className={styles.dock}>
+        {error ? <InlineNote tone="error">{error}</InlineNote> : null}
         {hasTasks || lastAssistant?.hasTasks ? (
           <Link href={withLocale("/journey", localeCode)} className={`${styles.seeSteps} pressable`}>
             {strings.seeSteps}
           </Link>
         ) : null}
-      </div>
-
-      {error ? <InlineNote tone="error">{error}</InlineNote> : null}
-
-      <div className={`${styles.composer} ${speaking ? styles.composerSpeaking : ""}`}>
-        <div className={styles.composerField}>
-          <MicButton
-            compact
-            listening={listening}
-            disabled={!online || working || transcribing}
-            disabledReason={!online ? strings.offlineReason : undefined}
-            labels={{
-              idle: strings.micIdle,
-              tapStop: strings.micTapStop,
-              holdStop: strings.micHoldStop,
-            }}
-            onGestureMode={() => {}}
-            onStart={() => void startListening()}
-            onStop={() => stopCapture()}
-          />
-          <label htmlFor="talk-draft" className={styles.sr}>
-            {strings.fieldLabel}
-          </label>
-          <textarea
-            id="talk-draft"
-            className={styles.field}
-            rows={1}
-            value={draft}
-            onChange={(event) => setDraft(event.target.value)}
-            placeholder={strings.typeHint}
-            disabled={working || listening}
-            onKeyDown={(event) => {
-              if (event.key === "Enter" && !event.shiftKey) {
-                event.preventDefault();
-                if (draft.trim()) void send(draft, "text");
-              }
-            }}
-          />
-          <button
-            type="button"
-            className={`${styles.send} pressable`}
-            disabled={working || listening || !draft.trim()}
-            title={!draft.trim() ? strings.confirmEmptyReason : strings.send}
-            onClick={() => void send(draft, "text")}
-          >
-            <Send size={18} aria-hidden="true" />
-            <span className={styles.sendLabel}>{strings.send}</span>
-          </button>
-        </div>
-        {lastAssistant ? (
-          <button
-            type="button"
-            className={styles.listen}
-            onClick={() =>
-              void playReply(spokenReply(lastAssistant.text, lastAssistant.followUp))
-            }
-          >
-            <Volume2 size={18} aria-hidden="true" />
-            {strings.listenAgain}
+        {turns.length > 0 ? (
+          <button type="button" className={styles.recapBtn} onClick={() => setRecapOpen(true)}>
+            {strings.recap}
           </button>
         ) : null}
+        {keyboardOpen ? (
+          <div className={styles.typeRow}>
+            <label htmlFor="talk-draft" className={styles.sr}>
+              {strings.fieldLabel}
+            </label>
+            <textarea
+              id="talk-draft"
+              className={styles.field}
+              rows={1}
+              value={draft}
+              onChange={(event) => setDraft(event.target.value)}
+              placeholder={strings.typeHint}
+              disabled={working}
+              onFocus={() => {
+                if (getVoiceSnapshot().phase === "listening") cancelCapture();
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  sendTextNow(draft);
+                }
+              }}
+            />
+            <button
+              type="button"
+              className={`${styles.send} pressable`}
+              disabled={working || !draft.trim()}
+              title={!draft.trim() ? strings.confirmEmptyReason : strings.send}
+              onClick={() => sendTextNow(draft)}
+            >
+              <Send size={18} aria-hidden="true" />
+              <span className={styles.sr}>{strings.send}</span>
+            </button>
+          </div>
+        ) : null}
       </div>
+
+      <VoiceRail
+        strings={strings.voiceRail}
+        onStart={() => void startListening()}
+        onStop={() => stopCapture()}
+        onCancel={() => cancelCapture()}
+        onListenAgain={
+          lastAssistant
+            ? () => void playReply(spokenReply(lastAssistant.text, lastAssistant.followUp))
+            : undefined
+        }
+        onKeyboard={typedFirst ? undefined : () => toggleKeyboard()}
+        keyboardActive={keyboardOpen}
+        thinkingDetail={working ? thinkStages[thinkIndex] : undefined}
+        disabled={!online || working}
+        disabledReason={!online ? strings.offlineReason : undefined}
+      />
+
+      <RecapSheet
+        open={recapOpen}
+        onClose={() => setRecapOpen(false)}
+        turns={turns}
+        strings={{
+          title: strings.recapTitle,
+          close: strings.recapClose,
+          followUp: strings.followUp,
+          sources: strings.sources,
+        }}
+      />
+
       {debug ? <AgentDebug turns={debugTurns} /> : null}
     </div>
   );

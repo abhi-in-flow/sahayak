@@ -21,6 +21,10 @@ export const STORAGE_KEYS = {
   onboarded: "sbn.onboarded",
   /** Chosen state for onboarding and RAG filter. */
   state: "sbn.state",
+  /** Read-aloud on/off for spoken replies. Inverted flag: absent = on. */
+  readAloud: "sbn.readaloud",
+  /** First-launch intro carousel dismissed. */
+  intro: "sbn.intro",
 } as const;
 
 export type OnboardState = "assam" | "maharashtra" | "karnataka" | "other";

@@ -10,6 +10,7 @@ desktop.ini
 
 # Local tooling / agent scratch
 .claude/
+.zcode/
 *.local
 .env
 .env.*

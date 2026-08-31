@@ -6,7 +6,12 @@
  * Callers treat a false return as the E-01 path.
  */
 
+import { isMuted } from "./voice/mute";
+
 let currentAudio: HTMLAudioElement | null = null;
+// Bumped by every stopSpeaking(); speak() takes a ticket so a stale call
+// stops at its next checkpoint instead of talking over a newer one.
+let speakSeq = 0;
 
 /** Speak the reply once. Never add a second question if the prose already asked one. */
 export function spokenReply(reply: string, followUp: string | null | undefined): string {
@@ -42,7 +47,11 @@ function browserSpeak(text: string, lang: string): Promise<boolean> {
       utterance.lang = lang;
       utterance.rate = 0.95;
       utterance.onend = () => resolve(true);
-      utterance.onerror = () => resolve(false);
+      utterance.onerror = (event) => {
+        // A deliberate stopSpeaking() mid-speech cancels the utterance;
+        // that is success, not the E-01 path.
+        resolve(event.error === "canceled" || event.error === "interrupted");
+      };
       window.speechSynthesis.speak(utterance);
     } catch {
       resolve(false);
@@ -52,7 +61,11 @@ function browserSpeak(text: string, lang: string): Promise<boolean> {
 
 export async function speak(text: string, lang: string): Promise<boolean> {
   stopSpeaking();
+  // Above the mute check: on the server, isMuted() would hydrate the
+  // mute store's cache from absent storage and pin it to false.
   if (typeof window === "undefined") return false;
+  const seq = ++speakSeq;
+  if (isMuted()) return true; // skips the /api/tts round-trip too
   const spoken = stripForSpeech(text).slice(0, 2400);
   if (!spoken) return false;
 
@@ -64,29 +77,48 @@ export async function speak(text: string, lang: string): Promise<boolean> {
     });
     if (response.ok) {
       const data = (await response.json()) as { audio?: string };
+      // Mute can flip, or a newer speak() can take over, during the
+      // fetch; stopSpeaking() cannot cancel an element that does not
+      // exist yet. Above createObjectURL so a superseded reply leaks
+      // no blob URL and skips the decode work.
+      if (seq !== speakSeq || isMuted()) return true;
       if (data.audio) {
         const bytes = Uint8Array.from(atob(data.audio), (ch) => ch.charCodeAt(0));
         const url = URL.createObjectURL(new Blob([bytes], { type: "audio/wav" }));
         const audio = new Audio(url);
         currentAudio = audio;
-        await new Promise<void>((resolve, reject) => {
-          audio.onended = () => resolve();
-          audio.onerror = () => reject(new Error("play"));
-          void audio.play();
-        });
-        URL.revokeObjectURL(url);
-        currentAudio = null;
+        try {
+          let started = false;
+          await new Promise<void>((resolve, reject) => {
+            // onplaying, not onplay: play fires the moment paused flips
+            // false, before any audio - setting started there would let
+            // an autoplay-blocked play() resolve as success.
+            audio.onplaying = () => {
+              started = true;
+            };
+            audio.onended = () => resolve();
+            audio.onpause = () => {
+              if (started) resolve(); // stopSpeaking() pauses mid-play; settle instead of hang
+            };
+            audio.onerror = () => reject(new Error("play"));
+            void audio.play().catch(() => reject(new Error("play")));
+          });
+        } finally {
+          URL.revokeObjectURL(url);
+          if (currentAudio === audio) currentAudio = null;
+        }
         return true;
       }
     }
   } catch {
-    // Fall through to browser synthesis.
+    // Fall through to browser synthesis - unless superseded or stopped.
   }
-
+  if (seq !== speakSeq || isMuted()) return true;
   return browserSpeak(spoken, lang);
 }
 
 export function stopSpeaking(): void {
+  speakSeq += 1;
   if (typeof window !== "undefined" && "speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }

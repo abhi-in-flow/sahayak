@@ -46,6 +46,14 @@
   --shadow-card: 0 1px 2px rgb(14 27 28 / 0.05), 0 4px 12px rgb(14 27 28 / 0.06);
   --shadow-sheet: 0 8px 32px rgb(14 27 28 / 0.18);
 
+  /* ---- voice (V-tier, DESIGN.md 10.7) ------------------------------- */
+  /* The rail's glow is accent-700 tinted to the page hue like the
+     shadows above. It decorates a state the rail label already carries
+     in words (A6), so like line-300 it is exempt from the 3:1 floor. */
+  --voice-glow: 0 0 0 1px rgb(10 86 84 / 0.35), 0 4px 24px rgb(10 86 84 / 0.28);
+  --dur-caption: 150ms; /* V-3 caption fade */
+  --dur-breath: 2s; /* V-2 voice-state breath loop */
+
   /* ---- focus ------------------------------------------------------- */
   /* The ring ALONE fails 3:1 against every dark fill (2.07 to 2.45).
      The offset gap is what satisfies A8 on filled CTAs. It is not

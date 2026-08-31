@@ -76,6 +76,11 @@ export interface S4Strings {
           owner alongside BUG-004's separator review. ---- */
   "s4.consequence": string;
   "s4.consequenceOne": string;
+  /* The .m1 / .oneOne variants exist for the same reason at m = 1: the
+     canonical "offices" template renders "1 offices". Same rendering
+     concern, same copy-owner flag. */
+  "s4.consequence.m1": string;
+  "s4.consequence.oneOne": string;
   "s4.updated.pill": string;
   "s4.updated.delta": string;
   "s4.updated.deltaOne": string;
@@ -88,6 +93,15 @@ export interface S4Strings {
   "s4.speak": string;
   /** Optional live-model card above the rule-built summary. */
   "s4.agent.heading": string;
+
+  /* ---- review card (definition-list restructure) ---------------------- */
+  /** Intro line above the question/answer rows in the summary card. */
+  "s4.review.intro": string;
+
+  /* ---- voice corridor (the rail mic means "speak a correction") ------- */
+  /** The rail's idle label on this screen, where a recording is a
+   *  correction, not a fresh capture. */
+  "s4.correction.micIdle": string;
 }
 
 export const enS4: S4Strings = {
@@ -144,6 +158,8 @@ export const enS4: S4Strings = {
 
   "s4.consequence": "This means {n} things to do, across {m} offices.",
   "s4.consequenceOne": "This means one thing to do, across {m} offices.",
+  "s4.consequence.m1": "This means {n} things to do, at one office.",
+  "s4.consequence.oneOne": "This means one thing to do, at one office.",
   "s4.updated.pill": "Updated",
   "s4.updated.delta": "This now means {n} things to do (was {p}).",
   "s4.updated.deltaOne": "This now means one thing to do (was {p}).",
@@ -153,6 +169,9 @@ export const enS4: S4Strings = {
   "s4.back": "Back",
   "s4.speak": "Hear this summary",
   "s4.agent.heading": "What the guide heard (live model)",
+
+  "s4.review.intro": "Review your answers before continuing.",
+  "s4.correction.micIdle": "Correct something with your voice",
 };
 
 // Placeholder pending professional translation. Complete, not correct.
@@ -211,6 +230,8 @@ export const hiS4: S4Strings = {
 
   "s4.consequence": "इसका मतलब है {n} काम, {m} दफ़्तरों में।",
   "s4.consequenceOne": "इसका मतलब है 1 काम, {m} दफ़्तरों में।",
+  "s4.consequence.m1": "इसका मतलब है {n} काम, 1 दफ़्तर में।",
+  "s4.consequence.oneOne": "इसका मतलब है 1 काम, 1 दफ़्तर में।",
   "s4.updated.pill": "अपडेट हुआ",
   "s4.updated.delta": "अब इसका मतलब है {n} काम (पहले {p} थे)।",
   "s4.updated.deltaOne": "अब इसका मतलब है 1 काम (पहले {p} थे)।",
@@ -220,4 +241,7 @@ export const hiS4: S4Strings = {
   "s4.back": "वापस",
   "s4.speak": "यह सारांश सुनिए",
   "s4.agent.heading": "गाइड ने क्या सुना (लाइव मॉडल)",
+
+  "s4.review.intro": "आगे बढ़ने से पहले अपने जवाब जाँच लें।",
+  "s4.correction.micIdle": "आवाज़ में कुछ सुधारें",
 };

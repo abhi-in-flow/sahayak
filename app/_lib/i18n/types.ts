@@ -56,10 +56,21 @@ export interface BaseStrings {
   "s1.guide.dismiss": string;
   "s1.guide.1.title": string;
   "s1.guide.1.body": string;
+  "s1.guide.1.n1": string;
+  "s1.guide.1.n2": string;
+  "s1.guide.1.n3": string;
   "s1.guide.2.title": string;
   "s1.guide.2.body": string;
+  "s1.guide.2.in": string;
+  "s1.guide.2.mid": string;
+  "s1.guide.2.out": string;
   "s1.guide.3.title": string;
-  "s1.guide.3.body": string;
+  "s1.guide.3.step1.title": string;
+  "s1.guide.3.step1.body": string;
+  "s1.guide.3.step2.title": string;
+  "s1.guide.3.step2.body": string;
+  "s1.guide.3.step3.title": string;
+  "s1.guide.3.step3.body": string;
   "s1.action.speak": string;
   "s1.action.type": string;
   "s1.action.browse": string;
@@ -90,6 +101,23 @@ export interface BaseStrings {
   "chrome.tab.speak": string;
   "chrome.tab.journey": string;
   "chrome.tab.help": string;
+
+  /* ---- VoiceRail (voice corridor chrome, S2-S5) ---------------------- */
+  "rail.micIdle": string;
+  "rail.micTapStop": string;
+  "rail.micHoldStop": string;
+  "rail.cancel": string;
+  "rail.listening": string;
+  "rail.transcribing": string;
+  "rail.thinking": string;
+  "rail.speaking": string;
+  "rail.listenAgain": string;
+  "rail.typeToggle": string;
+  "rail.readAloud": string;
+  "rail.step.speak": string;
+  "rail.step.clarify": string;
+  "rail.step.confirm": string;
+  "rail.step.plan": string;
 
   "onboard.title": string;
   "onboard.lang": string;

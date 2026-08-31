@@ -9,13 +9,17 @@ export function BrandMark({
   variant,
   decorative = false,
   wordmark = "Sahayak",
+  size,
 }: {
   variant: "icon" | "full";
   /** Empty alt when the word Sahayak is already beside the mark. */
   decorative?: boolean;
   wordmark?: string;
+  /** Square edge for the icon disc; unset keeps the 48px default. */
+  size?: number;
 }) {
   const alt = decorative ? "" : wordmark;
+  const iconStyle = size === undefined ? undefined : { width: size, height: size };
 
   if (variant === "full") {
     return (
@@ -30,9 +34,9 @@ export function BrandMark({
   }
 
   return (
-    <span className={styles.disc}>
+    <span className={styles.disc} style={iconStyle}>
       {/* eslint-disable-next-line @next/next/no-img-element -- see full variant */}
-      <img src="/assets/logo.png" alt={alt} className={styles.icon} />
+      <img src="/assets/logo.png" alt={alt} className={styles.icon} style={iconStyle} />
     </span>
   );
 }

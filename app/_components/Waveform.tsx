@@ -4,19 +4,17 @@ import { useState } from "react";
 import styles from "./Waveform.module.css";
 
 /**
- * S2 live waveform (D11 4): a single 4px amplitude bar row, accent-700
- * bars on surface, driven by the live mic level. The parent polls the
- * AnalyserNode at most every 100 ms and passes the measured level down;
- * this component only maps it onto `transform: scaleY`, the one allowed
- * channel.
+ * Live waveform for the VoiceRail (V-1, D10 10.7): a row of accent-700
+ * bars driven by the real mic level from the voice store. The rail polls
+ * the AnalyserNode at most every 100 ms; this component only maps the
+ * one measurement onto `transform: scaleY`, the one allowed channel.
  *
- * The per-bar gains below are STATIC shaping values applied to the one
- * real measurement, so the row reads as a waveform instead of a single
+ * The per-bar gains are STATIC shaping values applied to the one real
+ * measurement, so the row reads as a waveform instead of a single
  * pulsing block. The level itself is never faked.
  *
- * Reduced motion: the row collapses to a static mid-level bar while the
- * live transcript and the Stop control carry the "working" signal
- * (D11 4).
+ * Reduced motion: the row collapses to a static mid-level bar; the rail
+ * label and the live regions carry the state in words.
  */
 
 const GAINS = [
@@ -25,9 +23,6 @@ const GAINS = [
 ];
 
 export function Waveform({ level }: { level: number }) {
-  // Reads only once, on first client render of a capture in progress;
-  // the component never renders on the server (it exists only while
-  // listening), so window is defined whenever this runs.
   const [reduced] = useState(
     () =>
       typeof window !== "undefined" &&

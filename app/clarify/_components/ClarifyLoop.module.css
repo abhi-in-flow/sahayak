@@ -191,13 +191,56 @@
   color: var(--ink-700);
 }
 
-/* ---- voice answer ------------------------------------------------------ */
+/* ---- voice corridor (the rail below is the screen's one mic) ----------
+   VoiceRail positions itself fixed above the TabBar; the route shell
+   reserves ~200px of bottom padding for it. */
 
-.micRow {
+/* ---- M-2 heard echo chip (fixed just above the rail) ------------------
+   The rail at idle stands ~177px tall over the TabBar (70px pill offset
+   + pill + segments), so 190px + safe area clears it. The 200ms opacity
+   fade is M-2 territory; reduced motion gets the instant swap. */
+.echoChip {
+  position: fixed;
+  left: 50%;
+  bottom: calc(190px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 7;
   display: flex;
-  justify-content: center;
-  padding-top: var(--sp-2);
-  border-top: 1px solid var(--line-300); /* decorative rule only (D10 10.3) */
+  flex-direction: column;
+  gap: 2px;
+  width: calc(100% - var(--sp-4) * 2);
+  max-width: 448px;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--accent-100);
+  border: 1px solid var(--accent-700);
+  border-radius: var(--radius-control);
+  animation: echo-in 200ms ease-out;
+}
+
+@keyframes echo-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.echoHeard {
+  font-size: var(--size-meta);
+  color: var(--ink-700);
+}
+
+.echoAnswer {
+  font-size: var(--size-body);
+  font-weight: 600;
+  color: var(--accent-800);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .echoChip {
+    animation: none;
+  }
 }
 
 /* ---- Q2 coverage sheet ------------------------------------------------- */

@@ -1,0 +1,22 @@
+/* VoiceRail live waveform. V-1 (D10 10.7): accent-700 bars on the pill
+   surface, scaleY only. Decorative (aria-hidden on the row): the voice
+   state is carried in words by the rail label and the live regions. */
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+}
+
+.bar {
+  width: 3px;
+  height: 100%;
+  background: var(--accent-700);
+  border-radius: 999px;
+  /* transform only: no layout properties animate (D10 10.7) */
+  transform-origin: 50% 50%;
+}

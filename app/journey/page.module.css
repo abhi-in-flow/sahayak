@@ -47,6 +47,24 @@
   color: var(--ink-700);
 }
 
+/* "Listen to the plan": quiet text control in the header, same
+   vocabulary as the other underlined text controls on this screen. */
+.listenPlan {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--target-min);
+  padding: 0 var(--sp-2);
+  border: none;
+  background: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* C3 honesty chip: persistent, quiet (D10 10.8). */
 .honesty {
   align-self: flex-start;
@@ -146,15 +164,21 @@
 /* ---- timeline ----------------------------------------------------------- */
 
 /* The rail is 2px line-300, decorative only, aria-hidden (D10 10.9).
-   line-300 never bounds a component: cards carry their own borders. */
+   line-300 never bounds a component: cards carry their own borders.
+   The gutter is sized for the 24px checklist markers, which sit centred
+   on the rail (same centre line, so the markers read as the timeline). */
 .timeline {
   position: relative;
-  padding-left: var(--sp-4);
+  padding-left: 36px;
+  /* Text-safety clip lives HERE, not on .card: the checklist markers
+     hang 36px out of their card into the gutter, and a clip on the card
+     would cut them off. They stay inside .timeline's own box. */
+  overflow-x: clip;
 }
 
 .rail {
   position: absolute;
-  left: 3px;
+  left: 11px;
   top: var(--sp-3);
   bottom: var(--sp-3);
   width: 2px;
@@ -170,6 +194,68 @@
   gap: var(--sp-4);
 }
 
+.list li {
+  position: relative;
+}
+
+/* First-entry reveal only (M-1 budget): cards fade and settle in a
+   capped stagger; the delay is set per card inline, capped at 240ms so
+   the last card always lands inside 400ms regardless of list length.
+   transform/opacity only. Reduced motion: no animation at all; the
+   chips and the literal "n of n done" count carry the state. */
+.revealItem {
+  animation: card-in 160ms ease-out backwards;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .revealItem {
+    animation: none;
+  }
+}
+
+/* ---- checklist markers (decorative; Cleo/CVS vocabulary) ---------------- */
+
+/* Done = filled check, current = filled number on the accent, upcoming
+   = outlined number. Shape and icon, never colour alone (A6); the
+   StatusChip beside each one carries the same state in words. */
+.stepDot {
+  position: absolute;
+  top: var(--sp-4);
+  left: -36px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--size-meta);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.stepNow {
+  background: var(--accent-700);
+  color: var(--surface);
+}
+
+.stepDone {
+  background: var(--done-700);
+  color: var(--surface);
+}
+
+.stepTodo {
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  color: var(--ink-700);
+}
+
 /* ---- task cards ---------------------------------------------------------- */
 
 .card {
@@ -177,7 +263,7 @@
   display: block;
   min-width: 0;
   max-width: 100%;
-  overflow-x: clip;
+  /* no overflow-x here: it would clip the gutter marker (see .timeline) */
   padding: var(--sp-4);
   background: var(--surface);
   border: 1px solid var(--line-600);
@@ -185,10 +271,36 @@
 }
 
 /* "Do this first": task card plus 2px accent border and an accent-100
-   header band. Exactly one exists (D3 S5; D10 10.9). */
+   header band. Exactly one exists (D3 S5; D10 10.9); this is the
+   elevated card, so the one sanctioned card shadow marks it. */
 .cardFirst {
   border: 2px solid var(--accent-700);
   padding: calc(var(--sp-4) - 1px);
+  box-shadow: var(--shadow-card);
+}
+
+/* DONE: slightly receded. The page tint and softened ink read as
+   behind you; the chip, check marker and literal text keep the state
+   legible (never colour alone). */
+.cardDone {
+  background: var(--page);
+}
+
+.cardDone .taskName {
+  color: var(--ink-700);
+}
+
+.cardDone .department {
+  color: var(--ink-500);
+}
+
+/* UPCOMING: greyed but readable, and still bounded by line-600. */
+.cardUpcoming .taskName {
+  color: var(--ink-700);
+}
+
+.cardUpcoming .department {
+  color: var(--ink-500);
 }
 
 .firstBand {
@@ -449,4 +561,11 @@
   color: var(--accent-800);
   font-size: var(--size-body);
   text-decoration: underline;
+}
+
+/* Clearance for the fixed VoiceRail (bottom: 70px + safe area, pill
+   plus segment row above it). Added to the shell's own 72px TabBar
+   padding so the footer and last card never hide behind the rail. */
+.railClearance {
+  height: calc(144px + env(safe-area-inset-bottom));
 }

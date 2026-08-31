@@ -1,6 +1,8 @@
 import { DisclosureBanner, SkipLink } from "@/app/_components/Chrome";
 import { StateGate } from "@/app/_components/StateGate";
 import { DEFAULT_LOCALE, findLocale, t } from "@/app/_lib/i18n";
+import { guideStrings } from "@/app/_lib/i18n/guide";
+import { voiceRailStrings } from "@/app/_lib/voice/strings";
 import { TalkScreen, type TalkStrings } from "./_components/TalkScreen";
 import styles from "./page.module.css";
 
@@ -34,17 +36,15 @@ export default async function S2Page({
     fieldLabel: t(locale, "s2.fieldLabel"),
     typeHint: t(locale, "s2.talk.typeHint"),
     send: t(locale, "s2.talk.send"),
-    working: t(locale, "s2.talk.working"),
     workingSearch: t(locale, "s2.talk.workingSearch"),
     workingMatch: t(locale, "s2.talk.workingMatch"),
     workingWrite: t(locale, "s2.talk.workingWrite"),
-    listenAgain: t(locale, "s2.talk.listenAgain"),
     seeSteps: t(locale, "s2.talk.seeSteps"),
     followUp: t(locale, "s2.talk.followUp"),
     sources: t(locale, "s2.talk.sources"),
-    micIdle: t(locale, "s2.micIdle"),
-    micTapStop: t(locale, "s2.micTapStop"),
-    micHoldStop: t(locale, "s2.micHoldStop"),
+    recap: t(locale, "s2.recap"),
+    recapTitle: t(locale, "s2.recap.title"),
+    recapClose: t(locale, "s2.primerClose"),
     errorE02: t(locale, "s2.errorE02"),
     errorE04: t(locale, "s2.errorE04"),
     errorE06: t(locale, "s2.errorE06"),
@@ -54,7 +54,7 @@ export default async function S2Page({
     offlineReason: t(locale, "error.O01"),
     a11yStarted: t(locale, "s2.a11yStarted"),
     a11yStopped: t(locale, "s2.a11yStopped"),
-    transcribing: t(locale, "s2.transcribing"),
+    voiceRail: voiceRailStrings(locale),
   };
 
   return (
@@ -63,7 +63,7 @@ export default async function S2Page({
       <DisclosureBanner locale={locale} />
       <div className="shell">
         <main id="main" className={styles.main}>
-          <StateGate localeCode={locale.code}>
+          <StateGate localeCode={locale.code} guideStrings={guideStrings(locale)}>
             <TalkScreen
               localeCode={locale.code}
               endonym={locale.endonym}

@@ -1,0 +1,47 @@
+/* App-entry gate and route-streaming fallback. Fixed, so it escapes
+   .shell and covers the chrome while the real screen is undecided. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  background: var(--page);
+}
+
+/* The loop is the loading state (D10 10.7 V-2): a still mark reads as a
+   frozen app, so the lockup breathes on the voice-state token. */
+.mark {
+  display: grid;
+  justify-items: center;
+  gap: var(--sp-3);
+  animation: splash-breath var(--dur-breath) ease-in-out infinite;
+}
+
+/* The splash wordmark: the product name at title scale, the brand teal
+   of the BrandMark band, without the chrome. */
+.word {
+  margin: 0;
+  font-size: var(--size-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--accent-800);
+}
+
+@keyframes splash-breath {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.75;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mark {
+    animation: none;
+  }
+}

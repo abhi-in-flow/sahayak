@@ -288,23 +288,6 @@
   margin: 0;
 }
 
-/* ---- loading skeleton (first mount) ---------------------------------- */
-
-.loading {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-
-.skLine {
-  height: 24px;
-  width: 60%;
-}
-
-.skBlock {
-  height: 56px;
-}
-
 /* ---- account step ----------------------------------------------------- */
 
 .authStack {

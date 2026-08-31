@@ -3,7 +3,8 @@ import { BrandMark } from "@/app/_components/BrandMark";
 import { DisclosureBanner, GlobalFooter, SkipLink } from "@/app/_components/Chrome";
 import { S1Entry } from "@/app/_components/S1Entry";
 import { StateGate } from "@/app/_components/StateGate";
-import { preferredLocale, t } from "@/app/_lib/i18n";
+import { findLocale, preferredLocale, t } from "@/app/_lib/i18n";
+import { guideStrings } from "@/app/_lib/i18n/guide";
 import { TASKS, EXPECTED_TASK_COUNT, ROSTER_IS_COMPLETE } from "@/app/_lib/tasks";
 import styles from "./page.module.css";
 
@@ -33,8 +34,12 @@ export default async function S1Page({
   const preferred = preferredLocale(headerList.get("accept-language") ?? undefined);
 
   // The chrome renders in the pre-highlighted language until a tile is
-  // tapped; the chosen locale then rides the URL and T-LOCAL.
-  const locale = preferred;
+  // tapped; the chosen locale then rides the URL and T-LOCAL. The URL
+  // wins once present (onboarding finishes by replacing to /?locale=),
+  // so the hub and the first-run explainer render in the chosen
+  // language instead of the device's accept-language.
+  const requested = params.locale;
+  const locale = findLocale(Array.isArray(requested) ? requested[0] : requested) ?? preferred;
 
   return (
     <>
@@ -47,7 +52,7 @@ export default async function S1Page({
 
           <h1 className={styles.headline}>{t(locale, "s1.headline")}</h1>
 
-          <StateGate localeCode={locale.code}>
+          <StateGate localeCode={locale.code} guideStrings={guideStrings(locale)}>
             <S1Entry
               localeCode={locale.code}
               strings={{

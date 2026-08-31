@@ -240,6 +240,18 @@ The budget is deliberately near-zero (DP-5). Four animations exist in the entire
 
 Everything else is a state change with no transition. No parallax, no scroll-triggered reveals, no entrance animation, no hover physics, no marquees, no infinite loops other than M-3.
 
+### The V-tier: voice-state motion (the one sanctioned extension)
+
+The VoiceRail (D10 §10.9, voice corridor) needs motion that the M-budget cannot express, because for voice the loop **is the information**: a waveform that has stopped moving is how a live mic reads as "still recording", and a frozen bar is how a playing reply reads as "stuck". Three additional animations exist, all confined to the rail and its caption strip, and every one marks a state that is **also carried in words** by the rail label and the live regions (A6), so no information is motion-only:
+
+| # | Animation | Question it answers | Duration | Reduced-motion equivalent |
+|---|---|---|---|---|
+| V-1 | Rail waveform (S2/S3/S4/S5 rail) | "Is it hearing me right now?" | Real-time, driven by the measured mic level — never a timed loop | Static mid-level bar; the state label carries "listening" |
+| V-2 | Rail breath/glow (listening and speaking only) | "Is the mic live? Is it talking?" | 2 s opacity/shadow loop (`--dur-breath`) | Static accent border + glow colour, no pulse |
+| V-3 | Caption strip fade | "Are these the words it heard?" | 150 ms fade (`--dur-caption`) | Instant swap |
+
+V-2 is the deliberate exception to "no infinite loops other than M-3", and it is bounded twice: only while a voice state is active (it never decorates an idle screen), and only on the rail. Interim captions fade in via V-3; the frozen intermediate text stays visible through the "writing it down" state so the user can verify what will be sent. As with M-1 through M-4: `transform` and `opacity` only, and `prefers-reduced-motion` collapses V-1/V-2 to their static equivalents while the words carry the state.
+
 ### M-1 is spec-mandated, so its fallback is specified
 
 S5's Default state requires that completion "promotes the next task with an explicit visible transition (unlock animation) so causality is seen". Under `prefers-reduced-motion: reduce` the animation must not simply be deleted, because that would remove a behaviour D3 requires. The causality is instead carried by three non-motion channels that already exist in the specs and fire regardless of motion preference:
@@ -306,7 +318,10 @@ The recurring components across S1 to S11, with their token bindings. Each is sp
 | Error summary | S8 | Top of step, `--err-100` / `--err-700`, `role="alert"`, field names as in-page links (D6 §6.2) |
 | Bottom sheet | SH1, confirms | `--surface`, radius 12 top corners, scrim `--ink-900` at 55%, focus trapped (D6 §6.1) |
 | Progress ring | S5, S9 | `--accent-700` on `--line-300`. Always accompanied by the literal "{done} of {n} done"; the ring alone is decorative (DP-4) |
+| VoiceRail | S2, S3, S4, S5 | Fixed dock above the TabBar, 480 px cap, `--page` field with 1 px `--line-300` top edge. Pill: `--surface`, radius 8, min-height 64, 1 px `--line-600`; live states (listening, speaking) add the `--accent-700` border and the V-2 glow. Ghost caption strip above the pill in `--ink-500`. Corridor step segments in `meta` under the pill: filled dot = done, ring dot + bold = current (with live detail like "3 of 5"), grey dot = upcoming; `aria-hidden`, because the page's own words carry the same state. Motion per §10.7 V-tier; mic gesture per D3 S2 (P2-4). Read-aloud toggle: one icon button (`Volume2`/`VolumeX`) hoisted at pill level in every phase — a durable preference enforced in `speak()` (docs/voice-corridor.md) |
 | Skeleton | S2, S4, S5, S6, S7, S8, S9 | `--sunken` blocks in the shape of the real content, `aria-busy="true"` (D6 §6.2). Never a spinner |
+| Brand splash | Global (app-entry gate, onboarding entry, route streaming) | 72 px `BrandMark` disc over the "Sahayak" wordmark (`--size-title`, `--accent-800`), centered on a full-viewport `--page` overlay, breath loop on `--dur-breath` (§10.7 V-2), `role="status"` + `aria-busy="true"`. Holds one beat anchored to the splash's own paint on a fresh page load so it is seen even when hydration is instant; resolves instantly on in-tab navigation; hidden without JS so the server-rendered fallback stays reachable. Never a spinner |
+| First-run explainer | Gated entry (StateGate), once per browser | Full-viewport `--page` takeover at the splash's z-level, chained after the brand beat, rendered *instead of* the gated content (no scrim, no focus trap). Three user-paced slides. Slides 1–2: a static labelled process diagram (§10.10, the one further sanctioned composite — its short node labels are sighted-only decoration) over a `display` headline that is the per-slide focus target and one `body-lg` line. Slide 3: no scene — the plan is a real numbered stepper (`ol`), its step titles and descriptions live text under the headline with no separate body line. All slides keep aria-hidden segments + a visible "Step {n} of {total}" label, Skip top-right, secondary Back + primary CTA row. The slide swap rides M-2 (200 ms cross-fade, transform/opacity); the swap is announced politely. Dismissal (Skip, final CTA, or hardware back) writes `sbn.intro` to T-LOCAL once, at the dismissal interaction only |
 | Offline chip (O-01) | Global | `--warn-100` / `--warn-800`, cloud-off icon |
 | Interstitial (N6) | S6 | Full sheet before every external navigation |
 
@@ -319,6 +334,8 @@ The recurring components across S1 to S11, with their token bindings. Each is sp
 Icons are always accompanied by text in every control. The mic is explicitly never icon-only (D3 S1). Icons are `aria-hidden` when the adjacent text already carries the label, which is the normal case.
 
 The only hand-authored vector in the product is S7's reuse visualisation, which D3 already specifies as a static SVG with no graph library. It uses `--accent-700` for satisfied links and `--line-600` for hollow ones, and it is `aria-hidden` behind the coverage summary text that states the same fact in words.
+
+The first-run explainer's slides 1–2 (§10.9) are the one further exception, and they stay inside the same law: pictorial composites built from CSS primitives and icons from the product's icon set in token colours only, `aria-hidden` behind the slide's own title and body text, with no hand-drawn SVG paths and no motion inside the scene (DP-5). They may carry short locale node labels as sighted-only decoration — hidden text is acceptable there only because the adjacent title and body state the same meaning. Slide 3 is not a scene: its stepper is real content (live step titles and descriptions under the slide heading), with only its discs, number chips and rail decorative. (2026-08 redesign per the design audit: the decorative scene art was replaced by functional diagrams — literal failure icons, an input→process→output pipeline, and a sequenced stepper.)
 
 ---
 

@@ -52,6 +52,14 @@ export interface S5Strings {
   "s5.remove": string;
   "s5.removeConfirm": string;
 
+  /* ---- voice corridor (S5 mounts the rail; D10 10.9) ------------------ */
+  /** Read-aloud control for the whole checklist. Playback drives the
+   *  rail's speaking state; E-01 failure reuses the base "error.E01". */
+  "s5.listenPlan": string;
+  /** The rail's "plan" segment detail; always the ProgressRing's own
+   *  numbers, so the segment and the header count never disagree. */
+  "s5.railDetail": string;
+
   /* ---- actions and states -------------------------------------------- */
   "s5.changeAnswers": string;
   "s5.askAgain": string;
@@ -90,6 +98,8 @@ export const enS5: S5Strings = {
   "s5.remove": "Remove",
   "s5.removeConfirm": "Remove this step from your list?",
 
+  "s5.listenPlan": "Listen to the plan",
+  "s5.railDetail": "{done} of {n}",
   "s5.changeAnswers": "Change my answers",
   "s5.askAgain": "Ask again",
   "s5.saveList": "Save this list",
@@ -97,7 +107,7 @@ export const enS5: S5Strings = {
   "s5.shareTitle": "My steps from Sahayak",
   "s5.complete.title": "All steps done",
   "s5.complete.body":
-    "You finished all {n} steps on your list. Share or print this list as your record.",
+    "You finished every step on your list. Share or print it as your record.",
   "s5.back": "Back",
   "s5.notice.e21": "That step isn't part of your journey.",
 };
@@ -129,6 +139,8 @@ export const hiS5: S5Strings = {
   "s5.remove": "हटाएँ",
   "s5.removeConfirm": "इस चरण को अपनी सूची से हटाएँ?",
 
+  "s5.listenPlan": "योजना सुनें",
+  "s5.railDetail": "{n} में से {done}",
   "s5.changeAnswers": "मेरे जवाब बदलें",
   "s5.askAgain": "फिर पूछें",
   "s5.saveList": "यह सूची सेव करें",
@@ -136,7 +148,7 @@ export const hiS5: S5Strings = {
   "s5.shareTitle": "सहायक से मेरे कदम",
   "s5.complete.title": "सारे चरण पूरे",
   "s5.complete.body":
-    "आपने अपनी सूची के सारे {n} चरण पूरे कर लिए। इस सूची को अपने रिकॉर्ड के रूप में शेयर करें या प्रिंट करें।",
+    "आपनी सूची के सारे चरण पूरे कर लिए। इसे अपने रिकॉर्ड के रूप में शेयर करें या प्रिंट करें।",
   "s5.back": "वापस",
   "s5.notice.e21": "वह चरण आपकी यात्रा का हिस्सा नहीं है।",
 };
