@@ -96,10 +96,10 @@
   }
 }
 
-/* The illustration lives in the flexible middle, capped so the heading
-   never sinks below the fold on short viewports. */
+/* The diagram lives in the flexible middle. No max-height clamp: the
+   diagrams are fixed-size compositions, and at 200% text (D6 6.3) the
+   takeover scrolls rather than clipping content. */
 .scenePanel {
-  max-height: 40vh;
   display: grid;
   place-items: center;
 }
@@ -190,284 +190,278 @@
   cursor: pointer;
 }
 
-/* ---- scene primitives ---------------------------------------------------- */
-/* Purely pictorial (aria-hidden in the markup): token fills, borders and
-   radii plus lucide glyphs — no text anywhere in a scene, and nothing
-   inside a scene moves (DP-5). */
+/* ---- slide diagrams ------------------------------------------------------ */
+/* Slides 1–2: pictorial diagrams, aria-hidden at the call site — token
+   fills, borders and lucide glyphs, static (DP-5). The short labels
+   inside them are sighted-only decoration; the slide's title and body
+   carry the meaning. Slide 3's stepper is real content (its text is
+   live), so its decorative bits carry their own aria-hidden in markup. */
 
-.figure {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sp-1);
-}
-
-.head {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: var(--ink-700);
-}
-
-.torso {
-  width: 44px;
-  height: 34px;
-  border-radius: var(--radius-card);
-  background: var(--sunken);
-}
-
-/* Scene 1: the character queued before a leaning stack of forms. */
+/* Slide 1: three system-failure nodes over the one teal line of order. */
 .sceneOne {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: var(--sp-5);
+}
+
+.frictionRow {
+  display: flex;
+  align-items: flex-start;
   justify-content: center;
-  gap: var(--sp-6);
+  gap: var(--sp-2);
 }
 
-.queue {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-3);
-}
-
-.queueDot {
-  width: 12px;
-  height: 12px;
-  border: 2px solid var(--line-600);
-  border-radius: 50%;
-}
-
-.stack {
+.frictionNode {
   display: flex;
   flex-direction: column;
   align-items: center;
-}
-
-.formCard {
-  position: relative;
-  width: 120px;
-  padding: var(--sp-3);
-  display: flex;
-  flex-direction: column;
   gap: var(--sp-2);
-  background: var(--surface);
-  border: 1px solid var(--line-600);
-  border-radius: var(--radius-card);
+  width: 84px; /* 3 nodes + dashes + gaps must fit the 328px shell at 360 */
 }
 
-/* The lean is static composition, not animation (DP-5). */
-.formCardBack {
-  transform: rotate(-8deg);
-  margin-bottom: -24px;
-}
-
-.formCardFront {
-  transform: rotate(4deg);
-}
-
-.formError {
-  position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 24px;
-  height: 24px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--err-100);
+.frictionLabel {
+  font-size: var(--size-meta);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  text-align: center;
   color: var(--err-700);
 }
 
-.fieldLine {
-  width: 100%;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--sunken);
+/* Friction between the nodes rides the dashed channel (broken/uncertain). */
+.frictionDash {
+  width: 18px;
+  border-top: 2px dashed var(--line-600);
+  margin-top: 23px; /* mid-disc: half the 48px disc */
 }
 
-.fieldLineShort {
-  width: 60%;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--sunken);
-}
-
-/* Scene 2: voice out, reply docked right, mic and keyboard together. */
-.sceneTwo {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sp-4);
-}
-
-.talkRow {
+.orderRail {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--sp-4);
+  gap: var(--sp-1);
+  width: 200px;
+  color: var(--accent-700);
 }
 
-.bubble {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  min-height: 48px;
-  padding: var(--sp-3) var(--sp-4);
-  border-radius: var(--radius-card);
-  background: var(--sunken);
-}
-
-/* Static bars echoing Waveform's scaleY row — decoration, not a meter. */
-.waveBar {
-  width: 4px;
+.orderLine {
+  flex: 1;
+  height: 2px;
   border-radius: 999px;
   background: var(--accent-700);
 }
 
-/* The app's reply, docked right so the exchange reads two-way. */
-.bubbleReply {
-  align-self: flex-end;
-  flex-direction: column;
+/* Slide 2: input → Sahayak → structured output. */
+.sceneTwo {
+  display: flex;
   align-items: flex-start;
+  justify-content: center;
   gap: var(--sp-2);
-  background: var(--accent-100);
 }
 
-.replyLine {
-  width: 112px;
-  height: 8px;
-  border-radius: 999px;
+.ipoNode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.nodeLabel {
+  font-size: var(--size-meta);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  text-align: center;
+  max-width: 88px; /* keeps the widest label from widening the IPO row */
+  color: var(--ink-700);
+}
+
+.ipoArrow {
+  margin-top: 26px; /* art midline: the labels sit below the art */
+  color: var(--ink-500);
+}
+
+/* Either channel in one node: voice bars + mic over typed text. */
+.inputBubble {
+  display: flex;
+  flex-direction: column;
+  width: 92px; /* keeps the IPO row inside the 328px shell at 360 */
   background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+  overflow: hidden;
 }
 
-.replyLineShort {
-  width: 72px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--surface);
-}
-
-.modeRow {
+.bubbleVoice {
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
+  justify-content: center;
+  gap: 3px;
+  min-height: 36px;
+}
+
+/* Static bars echoing Waveform's scaleY row — decoration, not a meter. */
+.waveBar {
+  width: 3px;
+  border-radius: 999px;
+  background: var(--accent-700);
 }
 
 /* surface carries the white glyph on the filled disc (token-only). */
-.micDisc {
-  width: 56px;
-  height: 56px;
+.micBadge {
   display: grid;
   place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: var(--sp-1);
   border-radius: 50%;
   background: var(--accent-700);
   color: var(--surface);
 }
 
-.typePill {
-  display: inline-flex;
+.bubbleDivide {
+  height: 1px;
+  background: var(--line-300);
+}
+
+.bubbleType {
+  display: flex;
   align-items: center;
-  height: 32px;
-  padding: 0 var(--sp-3);
-  border: 1px solid var(--line-600);
-  border-radius: 999px;
-  background: var(--surface);
+  justify-content: center;
+  gap: var(--sp-1);
+  min-height: 30px;
   color: var(--ink-700);
 }
 
-/* Scene 3: a short exchange resolving into a plan card and pipeline. */
-.sceneThree {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--sp-4);
+/* The mark itself is the node; --voice-glow is the sanctioned glow. */
+.processNode {
+  display: grid;
+  place-items: center;
+  padding: var(--sp-1);
+  border-radius: 50%;
+  box-shadow: var(--voice-glow);
 }
 
-.chatPair {
-  width: 100%;
-  max-width: 240px;
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-}
-
-.chatUser {
-  align-self: flex-start;
-  width: 96px;
-  height: 24px;
-  border-radius: var(--radius-card);
-  background: var(--sunken);
-}
-
-.chatApp {
-  align-self: flex-end;
-  width: 128px;
-  height: 24px;
-  border-radius: var(--radius-card);
-  background: var(--accent-100);
-}
-
-.taskCard {
-  width: 100%;
-  max-width: 240px;
-  padding: var(--sp-3);
+/* Unstructured in (left) becomes neat, checked requests out (right). */
+.ticketStack {
   display: flex;
   flex-direction: column;
   gap: var(--sp-2);
+}
+
+.ticket {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  width: 84px; /* keeps the IPO row inside the 328px shell at 360 */
+  padding: var(--sp-2);
   background: var(--surface);
   border: 1px solid var(--line-600);
-  border-radius: var(--radius-card);
-}
-
-.taskRow {
-  display: flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 var(--sp-2);
   border-radius: var(--radius-control);
 }
 
-.taskNow {
-  background: var(--accent-100);
-  color: var(--accent-800);
-}
-
-.taskLocked {
-  background: var(--sunken);
-  color: var(--ink-500);
-}
-
-.taskDone {
-  background: var(--done-100);
-  color: var(--done-700);
-}
-
-.pipeline {
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-}
-
-.pipeChip {
-  display: inline-flex;
-  align-items: center;
-  padding: var(--sp-1) var(--sp-2);
+.ticketLine {
+  width: 100%;
+  height: 5px;
   border-radius: 999px;
+  background: var(--sunken);
 }
 
-.pipeNow {
-  background: var(--accent-100);
-  color: var(--accent-800);
+.ticketLineShort {
+  width: 60%;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--sunken);
 }
 
-.pipeDone {
+.ticketCheck {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   background: var(--done-100);
   color: var(--done-700);
 }
 
-.pipeArrow {
-  display: inline-flex;
-  color: var(--ink-500);
+/* Slide 3: the plan as a real numbered stepper (live text; the discs,
+   chips and rail are the aria-hidden decoration). */
+.steps {
+  width: 100%;
+  max-width: 340px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.step {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--sp-3);
+  align-items: start;
+  padding-bottom: var(--sp-4);
+}
+
+.step:last-child {
+  padding-bottom: 0;
+}
+
+/* The connecting rail: decorative line-300, one segment per gap. */
+.step:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 19px; /* half the 40px disc minus the 1px half-width */
+  top: 44px;
+  bottom: calc(-1 * var(--sp-1));
+  width: 2px;
+  border-radius: 999px;
+  background: var(--line-300);
+}
+
+.stepDisc {
+  position: relative;
+  flex: none;
+}
+
+.stepNum {
+  position: absolute;
+  top: -7px;
+  right: -9px;
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent-700);
+  color: var(--surface);
+  font-size: var(--size-meta);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+  min-width: 0; /* grid blowout guard: long labels wrap, never stretch */
+}
+
+.stepTitle {
+  font-size: var(--size-body);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  color: var(--ink-900);
+}
+
+.stepBody {
+  font-size: var(--size-meta);
+  line-height: var(--lh-body);
+  color: var(--ink-700);
 }

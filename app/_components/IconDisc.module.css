@@ -1,0 +1,29 @@
+/* Shared diagram primitive (see IconDisc.tsx). Token pairs only
+   (DECISION-007); raw hex here is a defect. */
+
+.disc {
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: 50%;
+}
+
+.accent {
+  background: var(--accent-100);
+  color: var(--accent-800);
+}
+
+.done {
+  background: var(--done-100);
+  color: var(--done-700);
+}
+
+.err {
+  background: var(--err-100);
+  color: var(--err-700);
+}
+
+.neutral {
+  background: var(--sunken);
+  color: var(--ink-700);
+}
