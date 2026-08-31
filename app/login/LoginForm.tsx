@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Field, errorId, helperId } from "@/app/_components/Field";
 import { InlineNote } from "@/app/_components/InlineNote";
 import { withLocale } from "@/app/_lib/nav";
+import { clearChats } from "@/app/_lib/chat/store";
 import {
   clearSession,
   readSessionLast4,
@@ -92,6 +93,9 @@ export function LoginForm({
 
   const handleSignOut = () => {
     clearSession();
+    // Sign-out wipes the on-device transcript too: chats are practice
+    // data scoped to a session, never an account.
+    clearChats();
     setLast4(null);
     setStep(1);
     setPhone("");

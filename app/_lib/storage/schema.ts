@@ -25,6 +25,13 @@ export const STORAGE_KEYS = {
   readAloud: "sbn.readaloud",
   /** First-launch intro carousel dismissed. */
   intro: "sbn.intro",
+  /**
+   * Chat sessions. A TEMPLATE, not a literal key: per-session records
+   * live under `sbn.chat.v1.{id}`, so this must stay a prefix constant.
+   */
+  chatPrefix: "sbn.chat.v1.",
+  /** Pointer at the active chat session's id. */
+  chatActive: "sbn.chat.active",
 } as const;
 
 export type OnboardState = "assam" | "maharashtra" | "karnataka" | "other";

@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { BrandMark } from "@/app/_components/BrandMark";
+import { BottomSheet } from "@/app/_components/BottomSheet";
 import { InlineNote } from "@/app/_components/InlineNote";
-import { Info, Send } from "lucide-react";
+import { History, Info, Send, Trash2 } from "lucide-react";
 import { VoiceRail, type VoiceRailStrings } from "@/app/_components/VoiceRail";
 import {
   getVoiceSnapshot,
@@ -15,6 +16,7 @@ import {
 import { attachLevelMeter } from "@/app/_lib/voice/levelMeter";
 import { SpeechCapture } from "@/app/_lib/speech";
 import { announce } from "@/app/_lib/announce";
+import { isMuted } from "@/app/_lib/voice/mute";
 import { withLocale } from "@/app/_lib/nav";
 import { toVoiceLocale } from "@/app/_lib/sarvamLang";
 import { speak, spokenReply, stopSpeaking } from "@/app/_lib/speak";
@@ -22,13 +24,33 @@ import { persistAgentJourney } from "@/app/_lib/agent/client";
 import type { AgentDebugTrace } from "@/app/_lib/agent/trace";
 import { pickRecorderMime, transcribeAudio } from "@/app/_lib/speech/pendingStream";
 import { readState } from "@/app/_lib/storage/local";
+import {
+  appendTurn,
+  clearChats,
+  deleteChat,
+  getActiveId,
+  getChatMetaSnapshot,
+  getChatSnapshot,
+  getChatsServerSnapshot,
+  openSeed,
+  subscribeChats,
+  type ChatTurn,
+} from "@/app/_lib/chat/store";
+import {
+  getJourneySnapshot,
+  getJourneyServerSnapshot,
+  subscribeJourney,
+} from "@/app/_lib/journey/store";
 import { AgentDebug, type DebugTurn } from "./AgentDebug";
 import { ExampleChips, type ExampleChipsStrings } from "./ExampleChips";
-import { RecapSheet, type RecapTurn } from "./RecapSheet";
 import styles from "./TalkScreen.module.css";
 
 const MAX_RECORD_MS = 25_000;
 const THINK_MS = 2_200;
+/** Distance from the document bottom inside which new turns auto-scroll. */
+const NEAR_BOTTOM_PX = 300;
+/** Frozen empty turns: stable identity for the no-session render. */
+const EMPTY_TURNS: ChatTurn[] = [];
 
 export interface TalkStrings {
   headline: string;
@@ -47,9 +69,16 @@ export interface TalkStrings {
   seeSteps: string;
   followUp: string;
   sources: string;
-  recap: string;
-  recapTitle: string;
-  recapClose: string;
+  chatsTitle: string;
+  chatsNew: string;
+  chatsEmpty: string;
+  chatsOpen: string;
+  chatsArchived: string;
+  chatsOnDevice: string;
+  jumpLatest: string;
+  chatsDelete: string;
+  chatsDeleteAll: string;
+  chatsClose: string;
   errorE02: string;
   errorE04: string;
   errorE06: string;
@@ -61,8 +90,6 @@ export interface TalkStrings {
   a11yStopped: string;
   voiceRail: VoiceRailStrings;
 }
-
-type Turn = RecapTurn & { hasTasks?: boolean };
 
 function subscribeOnline(onChange: () => void): () => void {
   window.addEventListener("online", onChange);
@@ -77,11 +104,29 @@ function isInsecureContext(): boolean {
   return typeof window !== "undefined" && !window.isSecureContext;
 }
 
+/** Per-session UI state, reset on every view switch. `keyboardOpen` is
+ *  deliberately NOT in the factory: S2b pins it true, and on S2 it is
+ *  device state (whether the typed row is open), not something a chat
+ *  session remembers. */
+const freshSessionUi = () => ({
+  draft: "",
+  error: null as string | null,
+  intentClear: false,
+  debugTurns: [] as DebugTurn[],
+});
+
 /**
- * S2 voice stage (and S2b typed-first variant). Voice-first: the latest
- * assistant reply is the stage's primary element; the full turn history
- * demotes into the RecapSheet; the VoiceRail replaces the composer as
- * the persistent mic affordance.
+ * S2 voice stage (and S2b typed-first variant). Voice-first: the whole
+ * exchange renders as a chat transcript - the user's words as right-
+ * aligned bubbles, replies as left-aligned ones - and the hero
+ * (headline, helper, ExampleChips) only exists before the first turn.
+ * Turns live in the persisted chat store keyed by `viewId`, so an
+ * interrupted visit resumes and earlier chats reopen from the
+ * past-chats sheet; sending from an archived chat forks a new session.
+ * The VoiceRail replaces the composer as the persistent mic affordance;
+ * a jump pill appears when the reader scrolls away from the newest
+ * turn, and new turns auto-scroll only while they are already near the
+ * bottom.
  *
  * Voice pipeline (voice-corridor contract, store.ts): mic press ->
  * setVoicePhase("listening") + attachLevelMeter(stream); Web Speech
@@ -110,16 +155,16 @@ export function TalkScreen({
   /** S2b: the typed field is persistent and the rail has no keyboard toggle. */
   typedFirst?: boolean;
 }) {
-  const [draft, setDraft] = useState(initialQuestion);
-  const [turns, setTurns] = useState<Turn[]>([]);
+  // Plain state, not store-owned: the store never knows which session
+  // is on screen. No key-by-viewId remount - the page is a Server
+  // Component and the capture/mic refs must survive view switches.
+  const [viewId, setViewId] = useState<string | null>(null);
+  const [sessionUi, setSessionUi] = useState(freshSessionUi);
   const [working, setWorking] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasTasks, setHasTasks] = useState(false);
-  const [sttFails, setSttFails] = useState(0);
   const [thinkIndex, setThinkIndex] = useState(0);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [nearBottom, setNearBottom] = useState(true);
   const [keyboardOpen, setKeyboardOpen] = useState(typedFirst);
-  const [recapOpen, setRecapOpen] = useState(false);
-  const [debugTurns, setDebugTurns] = useState<DebugTurn[]>([]);
 
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -130,7 +175,19 @@ export function TalkScreen({
   const playSeqRef = useRef(0);
   const startedRef = useRef(false);
   const listenStartedRef = useRef(false);
+  const nearBottomRef = useRef(true);
   const online = useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
+
+  const chatSnapshot = useSyncExternalStore(
+    subscribeChats,
+    () => getChatSnapshot(viewId),
+    getChatsServerSnapshot,
+  );
+  const turns = chatSnapshot?.turns ?? EMPTY_TURNS;
+  const activeId = useSyncExternalStore(subscribeChats, getActiveId, getChatsServerSnapshot);
+  const journey = useSyncExternalStore(subscribeJourney, getJourneySnapshot, getJourneyServerSnapshot);
+  const chatMetas = getChatMetaSnapshot();
+  const dayFormat = new Intl.DateTimeFormat(localeCode, { day: "numeric", month: "short" });
 
   const thinkStages = [strings.workingSearch, strings.workingMatch, strings.workingWrite];
 
@@ -152,10 +209,16 @@ export function TalkScreen({
 
   useEffect(() => {
     if (startedRef.current) return;
-    const seed = initialQuestion.trim();
-    if (!seed) return;
     startedRef.current = true;
-    void send(seed, "text");
+    const seed = initialQuestion.trim();
+    if (seed) {
+      // send() resolves the seeded session itself (openSeed below) and
+      // moves the view onto it.
+      void send(seed, "text");
+      return;
+    }
+    // Plain visit / ?listen=1: resume the interrupted chat, else hero.
+    void resumeActiveView();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- seed once
   }, [initialQuestion]);
 
@@ -165,6 +228,51 @@ export function TalkScreen({
     void startListening();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- listen once
   }, [autoListen]);
+
+  useEffect(() => {
+    // Strip ONLY q/listen from the address bar once they are handled;
+    // debug=1, locale and anything else must survive. Plain history
+    // API: replaces without navigating, no router dependency.
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("q") && !params.has("listen")) return;
+    params.delete("q");
+    params.delete("listen");
+    const rest = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      window.location.pathname + (rest ? `?${rest}` : "") + window.location.hash,
+    );
+  }, []);
+
+  useEffect(() => {
+    // Passive listener; state moves only when the near-bottom boolean
+    // flips, never per event.
+    const onScroll = () => {
+      const doc = document.documentElement;
+      const near = window.innerHeight + window.scrollY >= doc.scrollHeight - NEAR_BOTTOM_PX;
+      if (near !== nearBottomRef.current) {
+        nearBottomRef.current = near;
+        setNearBottom(near);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    // Follow new turns only while the reader is already near the
+    // bottom, and with default (instant) behavior - never smooth.
+    if (!nearBottom || turns.length === 0) return;
+    window.scrollTo({ top: document.documentElement.scrollHeight });
+  }, [turns, working, nearBottom]);
+
+  /** Plain visit / ?listen=1: resume the interrupted chat if there is
+   *  one; otherwise the hero renders and the first send creates. */
+  function resumeActiveView() {
+    const active = getActiveId();
+    if (active) setViewId(active);
+  }
 
   /** Rail cancel / unmount / mode switch: release everything WITHOUT
    *  transcribing. Touches only refs and the voice store, so it is safe
@@ -222,31 +330,28 @@ export function TalkScreen({
     setVoiceInterim("");
     if (transcript === "") {
       setVoicePhase("idle");
-      setError(strings.errorE02);
+      setSessionUi((ui) => ({ ...ui, error: strings.errorE02 }));
       return;
     }
     if (transcript === null) {
-      const next = sttFails + 1;
-      setSttFails(next);
       setVoicePhase("idle");
-      setError(strings.errorE04);
+      setSessionUi((ui) => ({ ...ui, error: strings.errorE04 }));
       return;
     }
-    setSttFails(0);
     setVoicePhase("thinking");
     await send(transcript, "voice");
   }
 
   async function startListening() {
     if (!online || working || getVoiceSnapshot().phase === "listening") return;
-    setError(null);
+    setSessionUi((ui) => ({ ...ui, error: null }));
     stopSpeaking();
     if (isInsecureContext()) {
-      setError(strings.errorInsecure);
+      setSessionUi((ui) => ({ ...ui, error: strings.errorInsecure }));
       return;
     }
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setError(strings.errorE06);
+      setSessionUi((ui) => ({ ...ui, error: strings.errorE06 }));
       return;
     }
     try {
@@ -282,28 +387,65 @@ export function TalkScreen({
       stopTimerRef.current = setTimeout(() => stopCapture(), MAX_RECORD_MS);
     } catch {
       cancelCapture();
-      setError(isInsecureContext() ? strings.errorInsecure : strings.errorE06);
+      setSessionUi((ui) => ({
+        ...ui,
+        error: isInsecureContext() ? strings.errorInsecure : strings.errorE06,
+      }));
     }
   }
 
   async function send(text: string, mode: "voice" | "text") {
     const message = text.trim();
     if (!message || working) return;
-    setDraft("");
-    setError(null);
+    // Resolve the target session FIRST, before any state moves: a hero
+    // send creates one lazily (openSeed), an archived view forks, and
+    // only a send inside the active chat appends in place. Writes are
+    // id-addressed from here on. A null id means storage is dead -
+    // surface the error note; there is no in-memory fallback that would
+    // silently drop the transcript on reload.
+    const sessionId = viewId && viewId === activeId ? viewId : openSeed(message);
+    if (!sessionId) {
+      setSessionUi((ui) => ({ ...ui, error: strings.errorAsk }));
+      return;
+    }
+    // The view follows the resolved session: a seed or hero send just
+    // created or resumed it, and a send from an archived chat forks -
+    // the transcript moves onto the fork either way.
+    setViewId(sessionId);
+    setSessionUi((ui) => ({ ...ui, draft: "", error: null }));
     setThinkIndex(0);
     setWorking(true);
+    // Typed sends own their rail state: without this the phase stays
+    // "idle", the rail keeps rendering the mic branch, and the rotating
+    // thinkingDetail prop is never shown (only finishRecording used to
+    // set it, on the voice path).
+    setVoicePhase("thinking");
     stopSpeaking();
 
-    const history = turns.map((turn) => ({
+    // The seed path (openSeed above, or ?q= on mount) has already
+    // appended this exact message as the session's last turn; sending
+    // it again must not duplicate it on screen or in the fetch history.
+    const prior = getChatSnapshot(sessionId)?.turns ?? [];
+    const lastPrior = prior[prior.length - 1];
+    const seeded = lastPrior?.role === "user" && lastPrior.text === message;
+    const historyTurns = seeded ? prior.slice(0, -1) : prior;
+    if (!seeded) appendTurn(sessionId, { role: "user", text: message });
+    // The user turn is durable from here: on a failed fetch it stays in
+    // the transcript and only the error note appears (no rollback).
+
+    // The server keeps only the last 8 history entries (route.ts,
+    // run.ts), so send at most that many and the server slice becomes
+    // an identity: the first turn rides along for narrative grounding,
+    // the other 7 are the most recent.
+    const capped =
+      historyTurns.length <= 7 ? historyTurns : [historyTurns[0], ...historyTurns.slice(-7)];
+    const history = capped.map((turn) => ({
       role: turn.role,
-      content: turn.followUp ? `${turn.text}\n${turn.followUp}` : turn.text,
+      content: (turn.text + (turn.followUp ? `\n${turn.followUp}` : "")).slice(0, 800),
     }));
-    const priorCitations = [...turns]
-      .reverse()
-      .find((turn) => turn.role === "assistant" && turn.citations?.length)?.citations ?? [];
-    const nextTurns: Turn[] = [...turns, { role: "user", text: message }];
-    setTurns(nextTurns);
+    const priorCitations =
+      [...capped].reverse().find((turn) => turn.role === "assistant" && turn.citations?.length)
+        ?.citations ?? [];
 
     try {
       const response = await fetch("/api/agent", {
@@ -335,18 +477,22 @@ export function TalkScreen({
       const tasks = data.tasks ?? [];
       const followUp = data.followUp ?? null;
       const intentClear = tasks.length > 0 && !followUp;
-      setTurns([
-        ...nextTurns,
-        {
-          role: "assistant",
-          text: reply || strings.seeSteps,
-          followUp,
-          citations: data.citations,
-          hasTasks: intentClear,
-        },
-      ]);
+      const spoken = spokenReply(reply, followUp);
+      appendTurn(sessionId, {
+        role: "assistant",
+        text: reply || strings.seeSteps,
+        followUp,
+        citations: data.citations,
+      });
+      // One announcement channel. Muted: announce() here (speak() will
+      // no-op anyway). Unmuted: playReply announces only when speak()
+      // really fails. There is no !online branch - offline, speak()
+      // falls through to the browser synthesis fallback, and announcing
+      // there would double-deliver the reply.
+      if (isMuted()) announce(spoken);
       if (debug && data.debug) {
-        setDebugTurns((prev) => [...prev, { question: message, trace: data.debug as AgentDebugTrace }]);
+        const trace = data.debug as AgentDebugTrace;
+        setSessionUi((ui) => ({ ...ui, debugTurns: [...ui.debugTurns, { question: message, trace }] }));
       }
       if (intentClear) {
         persistAgentJourney({
@@ -356,13 +502,12 @@ export function TalkScreen({
           citations: data.citations ?? [],
           tasks,
         });
-        setHasTasks(true);
+        setSessionUi((ui) => ({ ...ui, intentClear: true }));
       }
       setWorking(false);
-      await playReply(spokenReply(reply, followUp));
+      await playReply(spoken);
     } catch {
-      setError(strings.errorAsk);
-      setTurns(nextTurns);
+      setSessionUi((ui) => ({ ...ui, error: strings.errorAsk }));
       setWorking(false);
       setVoicePhase("idle");
     }
@@ -375,7 +520,11 @@ export function TalkScreen({
     const seq = ++playSeqRef.current;
     setVoicePhase("speaking");
     try {
-      await speak(text, toVoiceLocale(localeCode));
+      // A mute flipped mid-playback resolves true, so neither channel
+      // delivers the tail - accepted; the toggle click is the user's
+      // own signal that speech stopped.
+      const ok = await speak(text, toVoiceLocale(localeCode));
+      if (!ok) announce(text);
     } finally {
       if (seq === playSeqRef.current) setVoicePhase("idle");
     }
@@ -395,14 +544,62 @@ export function TalkScreen({
     setKeyboardOpen((open) => !open);
   }
 
+  /** Sheet row / new chat: leave the current view for `next` (null =
+   *  hero; the next send then creates a fresh session). Only an
+   *  in-flight send or transcription pins the view; listening and
+   *  speaking are torn down by the two calls below, not gated here. */
+  function switchTo(next: string | null) {
+    if (working || getVoiceSnapshot().phase === "transcribing") return;
+    cancelCapture();
+    stopSpeaking();
+    setSessionUi(freshSessionUi());
+    setViewId(next);
+  }
+
+  function removeChat(id: string) {
+    deleteChat(id);
+    if (id === viewId) {
+      // The chat being read was just deleted: reset like switchTo(null)
+      // (no working guard needed - sheet rows are momentary taps).
+      setSessionUi(freshSessionUi());
+      setViewId(null);
+    }
+  }
+
+  function removeAllChats() {
+    clearChats();
+    setSessionUi(freshSessionUi());
+    setViewId(null);
+  }
+
   const lastAssistant = [...turns].reverse().find((turn) => turn.role === "assistant");
-  const inConversation = Boolean(lastAssistant);
+  // Any turn flips the view, not just an assistant one: the hero must
+  // clear the instant the user sends, while the reply is still in
+  // flight. setWorking and the user appendTurn batch into one render,
+  // so turns.length already covers the pending state.
+  const inConversation = turns.length > 0;
+  // The CTA reads the journey store, never a per-turn flag: it must
+  // survive transcript cleanup and stay honest after a reload. A fresh
+  // fork (hero) must not advertise the previous chat's task list, so it
+  // is suppressed while the hero shows.
+  const showSeeSteps =
+    turns.length > 0 &&
+    (sessionUi.intentClear || (journey?.tasks.some((task) => !task.archived) ?? false));
 
   return (
     <div className={`${styles.wrap} ${inConversation ? styles.wrapTalking : ""}`}>
       <div className={styles.topRow}>
         <BrandMark variant="icon" decorative />
         <div className={styles.topActions}>
+          <button
+            type="button"
+            className={styles.infoButton}
+            aria-label={strings.chatsOpen}
+            title={strings.chatsOpen}
+            onClick={() => setSheetOpen(true)}
+          >
+            <History size={20} aria-hidden="true" />
+          </button>
           <Link
             href={withLocale("/whats-real", localeCode)}
             className={styles.infoButton}
@@ -431,31 +628,57 @@ export function TalkScreen({
           />
         </>
       ) : (
-        <div className={styles.stage} aria-live="polite">
-          {lastAssistant ? (
-            <>
-              <p className={styles.question}>{lastAssistant.text}</p>
-              {lastAssistant.followUp ? (
-                <p className={styles.stageFollowUp}>
-                  {strings.followUp} {lastAssistant.followUp}
-                </p>
-              ) : null}
-            </>
+        <>
+          {viewId !== null && viewId !== activeId ? (
+            <InlineNote>{strings.chatsArchived}</InlineNote>
           ) : null}
-        </div>
+          <ul className={styles.transcript}>
+            {turns.map((turn, index) =>
+              turn.role === "user" ? (
+                <li key={index} className={styles.turnUser}>
+                  <p className={styles.turnText}>{turn.text}</p>
+                </li>
+              ) : (
+                <li key={index} className={styles.turnAssistant}>
+                  <p className={styles.turnText}>{turn.text}</p>
+                  {turn.followUp ? (
+                    <p className={styles.turnFollowUp}>
+                      {strings.followUp} {turn.followUp}
+                    </p>
+                  ) : null}
+                  {turn.citations?.length ? (
+                    <details className={styles.sources}>
+                      <summary className={styles.sourcesTitle}>
+                        {strings.sources} ({turn.citations.length})
+                      </summary>
+                      <ol className={styles.sourcesList}>
+                        {turn.citations.map((cite, citeIndex) => (
+                          <li key={`${cite.title}-${citeIndex}`} className={styles.sourcesItem}>
+                            {cite.url ? (
+                              <a href={cite.url} target="_blank" rel="noopener">
+                                {cite.title}
+                              </a>
+                            ) : (
+                              <span>{cite.title}</span>
+                            )}
+                          </li>
+                        ))}
+                      </ol>
+                    </details>
+                  ) : null}
+                </li>
+              ),
+            )}
+          </ul>
+        </>
       )}
 
       <div className={styles.dock}>
-        {error ? <InlineNote tone="error">{error}</InlineNote> : null}
-        {hasTasks || lastAssistant?.hasTasks ? (
+        {sessionUi.error ? <InlineNote tone="error">{sessionUi.error}</InlineNote> : null}
+        {showSeeSteps ? (
           <Link href={withLocale("/journey", localeCode)} className={`${styles.seeSteps} pressable`}>
             {strings.seeSteps}
           </Link>
-        ) : null}
-        {turns.length > 0 ? (
-          <button type="button" className={styles.recapBtn} onClick={() => setRecapOpen(true)}>
-            {strings.recap}
-          </button>
         ) : null}
         {keyboardOpen ? (
           <div className={styles.typeRow}>
@@ -466,8 +689,8 @@ export function TalkScreen({
               id="talk-draft"
               className={styles.field}
               rows={1}
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
+              value={sessionUi.draft}
+              onChange={(event) => setSessionUi((ui) => ({ ...ui, draft: event.target.value }))}
               placeholder={strings.typeHint}
               disabled={working}
               onFocus={() => {
@@ -476,16 +699,16 @@ export function TalkScreen({
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();
-                  sendTextNow(draft);
+                  sendTextNow(sessionUi.draft);
                 }
               }}
             />
             <button
               type="button"
               className={`${styles.send} pressable`}
-              disabled={working || !draft.trim()}
-              title={!draft.trim() ? strings.confirmEmptyReason : strings.send}
-              onClick={() => sendTextNow(draft)}
+              disabled={working || !sessionUi.draft.trim()}
+              title={!sessionUi.draft.trim() ? strings.confirmEmptyReason : strings.send}
+              onClick={() => sendTextNow(sessionUi.draft)}
             >
               <Send size={18} aria-hidden="true" />
               <span className={styles.sr}>{strings.send}</span>
@@ -493,6 +716,16 @@ export function TalkScreen({
           </div>
         ) : null}
       </div>
+
+      {inConversation && !nearBottom ? (
+        <button
+          type="button"
+          className={styles.jumpPill}
+          onClick={() => window.scrollTo({ top: document.documentElement.scrollHeight })}
+        >
+          {strings.jumpLatest}
+        </button>
+      ) : null}
 
       <VoiceRail
         strings={strings.voiceRail}
@@ -511,19 +744,63 @@ export function TalkScreen({
         disabledReason={!online ? strings.offlineReason : undefined}
       />
 
-      <RecapSheet
-        open={recapOpen}
-        onClose={() => setRecapOpen(false)}
-        turns={turns}
-        strings={{
-          title: strings.recapTitle,
-          close: strings.recapClose,
-          followUp: strings.followUp,
-          sources: strings.sources,
-        }}
-      />
+      <BottomSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        title={strings.chatsTitle}
+        closeLabel={strings.chatsClose}
+      >
+        <div className={styles.sheetBody}>
+          <button
+            type="button"
+            className={styles.chatRow}
+            onClick={() => {
+              setSheetOpen(false);
+              switchTo(null);
+            }}
+          >
+            <span className={styles.chatRowTitle}>{strings.chatsNew}</span>
+          </button>
+          {chatMetas.length === 0 ? (
+            <p className={styles.chatEmpty}>{strings.chatsEmpty}</p>
+          ) : (
+            <ul className={styles.chatList}>
+              {chatMetas.map((meta) => (
+                <li key={meta.id} className={styles.chatItem}>
+                  <button
+                    type="button"
+                    className={`${styles.chatRow} ${meta.id === viewId ? styles.chatRowActive : ""}`}
+                    onClick={() => {
+                      setSheetOpen(false);
+                      switchTo(meta.id);
+                    }}
+                  >
+                    <span className={styles.chatRowTitle}>{meta.title || strings.chatsNew}</span>
+                    <span className={styles.chatRowDate}>
+                      {dayFormat.format(new Date(meta.updatedAt))}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.chatDelete}
+                    aria-label={strings.chatsDelete}
+                    title={strings.chatsDelete}
+                    onClick={() => removeChat(meta.id)}
+                  >
+                    <Trash2 size={18} aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <button type="button" className={styles.chatDeleteAll} onClick={removeAllChats}>
+            {strings.chatsDeleteAll}
+          </button>
+          <p className={styles.chatOnDevice}>{strings.chatsOnDevice}</p>
+        </div>
+      </BottomSheet>
 
-      {debug ? <AgentDebug turns={debugTurns} /> : null}
+      {debug ? <AgentDebug turns={sessionUi.debugTurns} /> : null}
     </div>
   );
 }
