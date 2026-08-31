@@ -325,6 +325,106 @@
   opacity: 0.45;
 }
 
+.chatOnDevice {
+  margin: 0;
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+/* ---- past-chats sheet ------------------------------------------------ */
+
+.sheetBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  max-height: min(60dvh, 30rem);
+  overflow-y: auto;
+}
+
+.chatList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.chatItem {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.chatRow {
+  flex: 1;
+  min-height: var(--target-min);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-3);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  font: inherit;
+  font-size: var(--size-body);
+  text-align: start;
+  cursor: pointer;
+}
+
+.chatRowActive {
+  border-color: var(--accent-700);
+  color: var(--accent-800);
+  font-weight: 600;
+}
+
+.chatRowTitle {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.chatRowDate {
+  flex: none;
+  font-size: var(--size-meta);
+  color: var(--ink-500);
+}
+
+.chatDelete {
+  flex: none;
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--ink-900);
+  cursor: pointer;
+}
+
+.chatDeleteAll {
+  align-self: flex-start;
+  min-height: var(--target-min);
+  padding: 0 var(--sp-3);
+  background: transparent;
+  border: 0;
+  color: var(--err-700);
+  font: inherit;
+  font-size: var(--size-meta);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chatEmpty {
+  margin: 0;
+  font-size: var(--size-body);
+  color: var(--ink-500);
+}
+
 @media (max-width: 480px) {
   .typeRow .field::placeholder {
     font-size: 16px; /* keep placeholder text on one line on small phones */

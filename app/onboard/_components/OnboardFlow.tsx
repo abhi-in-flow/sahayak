@@ -3,6 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { clearSession, readSessionLast4, readState, writeLocale, writeOnboarded, writeState } from "@/app/_lib/storage/local";
+import { clearChats } from "@/app/_lib/chat/store";
 import { announce } from "@/app/_lib/announce";
 import { withLocale } from "@/app/_lib/nav";
 import { BrandSplash, splashBeatRemaining } from "@/app/_components/BrandSplash";
@@ -284,6 +285,9 @@ export function OnboardFlow({
 
   function handleSignOut() {
     clearSession();
+    // Sign-out wipes the on-device transcript too: chats are practice
+    // data scoped to a session, never an account.
+    clearChats();
     setLast4(null);
     dispatch({ type: "signOut" });
   }

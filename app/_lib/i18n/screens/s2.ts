@@ -82,7 +82,15 @@ export interface S2Strings {
   "s2.talk.typeHint": string;
   "s2.errorInsecure": string;
 
-  /* ---- Jump to latest pill (chat transcript) ------------------------ */
+  /* ---- Past chats (persisted transcript) ---------------------------- */
+  "s2.chats.title": string;
+  "s2.chats.new": string;
+  "s2.chats.empty": string;
+  "s2.chats.open": string;
+  "s2.chats.archived": string;
+  "s2.chats.onDevice": string;
+  "s2.chats.delete": string;
+  "s2.chats.deleteAll": string;
   "s2.chats.jumpLatest": string;
 }
 
@@ -149,6 +157,14 @@ export const enS2: S2Strings = {
   "s2.errorInsecure":
     "This phone will not open the microphone on a plain http address. There is no permission popup on Wi-Fi IPs. Open Sahayak over https, or use localhost on this computer.",
 
+  "s2.chats.title": "Past chats",
+  "s2.chats.new": "New chat",
+  "s2.chats.empty": "No chats yet",
+  "s2.chats.open": "Past chats",
+  "s2.chats.archived": "You are reading an earlier chat. Sending here starts a new chat.",
+  "s2.chats.onDevice": "Chats stay on this device.",
+  "s2.chats.delete": "Delete chat",
+  "s2.chats.deleteAll": "Delete all chats",
   "s2.chats.jumpLatest": "Jump to latest",
 };
 
@@ -217,5 +233,13 @@ export const hiS2: S2Strings = {
   "s2.errorInsecure":
     "सादे http पते पर यह फ़ोन माइक्रोफ़ोन नहीं खोलेगा। वाई-फ़ाई आईपी पर अनुमति पॉपअप नहीं आता। सहायक को https पर खोलें, या इस कंप्यूटर पर localhost इस्तेमाल करें।",
 
+  "s2.chats.title": "पुरानी चैट",
+  "s2.chats.new": "नई चैट",
+  "s2.chats.empty": "अभी कोई चैट नहीं",
+  "s2.chats.open": "पुरानी चैट",
+  "s2.chats.archived": "आप पुरानी चैट पढ़ रहे हैं। यहाँ कुछ भेजने पर नई चैट शुरू होगी।",
+  "s2.chats.onDevice": "चैट इसी डिवाइस पर रहती है।",
+  "s2.chats.delete": "चैट हटाएँ",
+  "s2.chats.deleteAll": "सारी चैट हटाएँ",
   "s2.chats.jumpLatest": "सबसे नीचे जाएँ",
 };
