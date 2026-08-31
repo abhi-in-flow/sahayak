@@ -320,6 +320,8 @@ The recurring components across S1 to S11, with their token bindings. Each is sp
 | Progress ring | S5, S9 | `--accent-700` on `--line-300`. Always accompanied by the literal "{done} of {n} done"; the ring alone is decorative (DP-4) |
 | VoiceRail | S2, S3, S4, S5 | Fixed dock above the TabBar, 480 px cap, `--page` field with 1 px `--line-300` top edge. Pill: `--surface`, radius 8, min-height 64, 1 px `--line-600`; live states (listening, speaking) add the `--accent-700` border and the V-2 glow. Ghost caption strip above the pill in `--ink-500`. Corridor step segments in `meta` under the pill: filled dot = done, ring dot + bold = current (with live detail like "3 of 5"), grey dot = upcoming; `aria-hidden`, because the page's own words carry the same state. Motion per §10.7 V-tier; mic gesture per D3 S2 (P2-4). Read-aloud toggle: one icon button (`Volume2`/`VolumeX`) hoisted at pill level in every phase — a durable preference enforced in `speak()` (docs/voice-corridor.md) |
 | Skeleton | S2, S4, S5, S6, S7, S8, S9 | `--sunken` blocks in the shape of the real content, `aria-busy="true"` (D6 §6.2). Never a spinner |
+| Brand splash | Global (app-entry gate, onboarding entry, route streaming) | 72 px `BrandMark` disc over the "Sahayak" wordmark (`--size-title`, `--accent-800`), centered on a full-viewport `--page` overlay, breath loop on `--dur-breath` (§10.7 V-2), `role="status"` + `aria-busy="true"`. Holds one beat anchored to the splash's own paint on a fresh page load so it is seen even when hydration is instant; resolves instantly on in-tab navigation; hidden without JS so the server-rendered fallback stays reachable. Never a spinner |
+| First-run explainer | Gated entry (StateGate), once per browser | Full-viewport `--page` takeover at the splash's z-level, chained after the brand beat, rendered *instead of* the gated content (no scrim, no focus trap). Three user-paced slides: a static pictorial scene (§10.10, the one further sanctioned composite) over a `display` headline that is the per-slide focus target, one `body-lg` line, aria-hidden segments + a visible "Step {n} of {total}" label, Skip top-right, secondary Back + primary CTA row. The slide swap rides M-2 (200 ms cross-fade, transform/opacity); the scene swap is announced politely. Dismissal (Skip, final CTA, or hardware back) writes `sbn.intro` to T-LOCAL once, at the dismissal interaction only |
 | Offline chip (O-01) | Global | `--warn-100` / `--warn-800`, cloud-off icon |
 | Interstitial (N6) | S6 | Full sheet before every external navigation |
 
@@ -332,6 +334,8 @@ The recurring components across S1 to S11, with their token bindings. Each is sp
 Icons are always accompanied by text in every control. The mic is explicitly never icon-only (D3 S1). Icons are `aria-hidden` when the adjacent text already carries the label, which is the normal case.
 
 The only hand-authored vector in the product is S7's reuse visualisation, which D3 already specifies as a static SVG with no graph library. It uses `--accent-700` for satisfied links and `--line-600` for hollow ones, and it is `aria-hidden` behind the coverage summary text that states the same fact in words.
+
+The first-run explainer's scenes (§10.9) are the one further exception, and they stay inside the same law: pictorial composites built from CSS primitives and icons from the product's icon set in token colours only, `aria-hidden` behind the slide's own title and body text, with no hand-drawn SVG paths and no motion inside the scene (DP-5).
 
 ---
 

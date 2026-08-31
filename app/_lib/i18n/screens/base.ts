@@ -31,16 +31,16 @@ export const enBase: BaseStrings = {
   "s1.noJsIntro":
     "This list works without JavaScript. Each step links to the official government page for it.",
 
+  // Consumed by the first-run explainer carousel (StateGate → FirstRunCarousel).
   "s1.guide.title": "What you can use this for",
   "s1.guide.skip": "Skip for now",
   "s1.guide.dismiss": "Got it",
-  "s1.guide.1.title": "Speak your situation",
-  "s1.guide.1.body": "Say what happened in your language. Typing works too.",
-  "s1.guide.2.title": "Get a checklist",
-  "s1.guide.2.body":
-    "The guide asks only if something is missing, then builds your to-do list from a saved directory.",
-  "s1.guide.3.title": "Practice the form",
-  "s1.guide.3.body": "Fill a practice form here. Nothing is sent to any government office.",
+  "s1.guide.1.title": "When the system stalls",
+  "s1.guide.1.body": "Forms are confusing. Portals crash. Queues reset.",
+  "s1.guide.2.title": "Just tell Sahayak",
+  "s1.guide.2.body": "Say what happened in your language. Typing works too.",
+  "s1.guide.3.title": "Your plan, step by step",
+  "s1.guide.3.body": "A clear list of official steps, with the forms queued and submitted for you.",
   "s1.action.speak": "Speak",
   "s1.action.type": "Type",
   "s1.action.browse": "Browse situations",
@@ -161,16 +161,16 @@ export const hiBase: BaseStrings = {
   "s1.noJsIntro":
     "यह सूची बिना जावास्क्रिप्ट के काम करती है। हर चरण उसके आधिकारिक सरकारी पृष्ठ से जुड़ा है।",
 
+  // Consumed by the first-run explainer carousel (StateGate → FirstRunCarousel).
   "s1.guide.title": "इसका इस्तेमाल कैसे करें",
   "s1.guide.skip": "अभी छोड़ें",
   "s1.guide.dismiss": "समझ गया",
-  "s1.guide.1.title": "अपनी स्थिति बोलिए",
-  "s1.guide.1.body": "अपनी भाषा में बताइए क्या हुआ। टाइप भी कर सकते हैं।",
-  "s1.guide.2.title": "चेकलिस्ट पाएँ",
-  "s1.guide.2.body":
-    "कमी होने पर ही गाइड सवाल पूछता है, फिर सेव निर्देशिका से काम की सूची बनाता है।",
-  "s1.guide.3.title": "फ़ॉर्म का अभ्यास",
-  "s1.guide.3.body": "यहाँ अभ्यास फ़ॉर्म भरें। किसी सरकारी दफ़्तर में कुछ नहीं जाता।",
+  "s1.guide.1.title": "जब सिस्टम अटक जाता है",
+  "s1.guide.1.body": "फ़ॉर्म उलझन भरे होते हैं। पोर्टल क्रैश होते हैं। क़तार फिर से शुरू होती है।",
+  "s1.guide.2.title": "सहायक को बस बताइए",
+  "s1.guide.2.body": "जो हुआ वह अपनी भाषा में कहिए। टाइप करना भी काम करता है।",
+  "s1.guide.3.title": "आपकी योजना, कदम दर कदम",
+  "s1.guide.3.body": "सरकारी कदमों की साफ़ सूची। फ़ॉर्म भरने का काम सहायक आपके लिए क़तार में लगाकर करता है।",
   "s1.action.speak": "बोलें",
   "s1.action.type": "टाइप",
   "s1.action.browse": "स्थितियाँ देखें",

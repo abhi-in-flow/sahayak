@@ -1,0 +1,473 @@
+/* First-run explainer carousel: a full-viewport takeover rendered
+   instead of the page (the parent gate swaps its children for this), so
+   it is a fixed --page overlay on the BrandSplash plane — not a dialog:
+   no scrim, no focus trap, no role. Tokens only (DECISION-007); raw hex
+   here is a defect. Motion is M-2's 200ms directional cross-fade on the
+   slide body, transform and opacity only (D10 10.7); the global
+   prefers-reduced-motion collapse in globals.css flattens it. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20; /* BrandSplash plane: above TabBar (8) and rails (7) */
+  background: var(--page);
+  /* 200% text (D6 6.3) can outgrow a short viewport: the takeover
+     scrolls rather than clipping content. */
+  overflow-y: auto;
+}
+
+/* The .shell idiom width. No TabBar offset in the padding: the overlay
+   covers the chrome. */
+.frame {
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-5);
+  padding: var(--sp-4) var(--sp-4) calc(var(--sp-4) + env(safe-area-inset-bottom));
+}
+
+/* ---- top row --------------------------------------------------------- */
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skip {
+  min-height: var(--target-min);
+  display: inline-flex;
+  align-items: center;
+  padding: 0 var(--sp-2);
+  border: none;
+  background: none;
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body);
+  font-weight: 500;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---- slide body ------------------------------------------------------- */
+
+/* flex: 1 takes the middle band between the top row and the pinned
+   progress/actions chrome; the group centers within it. */
+.slide {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--sp-5);
+}
+
+/* Keyed per slide in the component; direction picks the keyframe, so the
+   cross-fade carries the causality of the user's own tap (M-2). */
+.slideIn {
+  animation: slide-fwd 200ms ease-out;
+}
+
+.slideBack {
+  animation: slide-back 200ms ease-out;
+}
+
+@keyframes slide-fwd {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-back {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* The illustration lives in the flexible middle, capped so the heading
+   never sinks below the fold on short viewports. */
+.scenePanel {
+  max-height: 40vh;
+  display: grid;
+  place-items: center;
+}
+
+/* The per-slide focus target. Focus is programmatic only; the global
+   :focus/:focus-visible rules own the outline. */
+.headline {
+  font-size: var(--size-display);
+  line-height: var(--lh-heading);
+  max-width: 28ch;
+}
+
+.body {
+  font-size: var(--size-body-lg);
+  color: var(--ink-700);
+}
+
+/* ---- progress ---------------------------------------------------------- */
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.progressLabel {
+  font-size: var(--size-meta);
+  font-weight: 500;
+  color: var(--ink-700);
+  margin: 0;
+}
+
+/* Decorative (DP-4): the label above carries the state in words, so the
+   track is aria-hidden and wears the decorative line token. */
+.track {
+  display: flex;
+  gap: var(--sp-1);
+}
+
+.segment {
+  height: 4px;
+  flex: 1;
+  background: var(--line-300); /* decorative only: never a border */
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.segmentFill {
+  display: block;
+  height: 100%;
+  background: var(--accent-700);
+  transform-origin: left;
+}
+
+/* ---- actions ------------------------------------------------------------ */
+
+.actions {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: stretch;
+}
+
+.back {
+  min-height: var(--cta-min-height);
+  padding: 0 var(--sp-5);
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-control);
+  color: var(--accent-800);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cta {
+  flex: 1;
+  min-height: var(--cta-min-height);
+  border: none;
+  border-radius: var(--radius-control);
+  background: var(--accent-700);
+  color: var(--surface);
+  font-family: inherit;
+  font-size: var(--size-body-lg);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---- scene primitives ---------------------------------------------------- */
+/* Purely pictorial (aria-hidden in the markup): token fills, borders and
+   radii plus lucide glyphs — no text anywhere in a scene, and nothing
+   inside a scene moves (DP-5). */
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.head {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ink-700);
+}
+
+.torso {
+  width: 44px;
+  height: 34px;
+  border-radius: var(--radius-card);
+  background: var(--sunken);
+}
+
+/* Scene 1: the character queued before a leaning stack of forms. */
+.sceneOne {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-6);
+}
+
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.queueDot {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--line-600);
+  border-radius: 50%;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.formCard {
+  position: relative;
+  width: 120px;
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+/* The lean is static composition, not animation (DP-5). */
+.formCardBack {
+  transform: rotate(-8deg);
+  margin-bottom: -24px;
+}
+
+.formCardFront {
+  transform: rotate(4deg);
+}
+
+.formError {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--err-100);
+  color: var(--err-700);
+}
+
+.fieldLine {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sunken);
+}
+
+.fieldLineShort {
+  width: 60%;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--sunken);
+}
+
+/* Scene 2: voice out, reply docked right, mic and keyboard together. */
+.sceneTwo {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.talkRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+}
+
+.bubble {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: 48px;
+  padding: var(--sp-3) var(--sp-4);
+  border-radius: var(--radius-card);
+  background: var(--sunken);
+}
+
+/* Static bars echoing Waveform's scaleY row — decoration, not a meter. */
+.waveBar {
+  width: 4px;
+  border-radius: 999px;
+  background: var(--accent-700);
+}
+
+/* The app's reply, docked right so the exchange reads two-way. */
+.bubbleReply {
+  align-self: flex-end;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  background: var(--accent-100);
+}
+
+.replyLine {
+  width: 112px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.replyLineShort {
+  width: 72px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.modeRow {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* surface carries the white glyph on the filled disc (token-only). */
+.micDisc {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-700);
+  color: var(--surface);
+}
+
+.typePill {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--line-600);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink-700);
+}
+
+/* Scene 3: a short exchange resolving into a plan card and pipeline. */
+.sceneThree {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+}
+
+.chatPair {
+  width: 100%;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.chatUser {
+  align-self: flex-start;
+  width: 96px;
+  height: 24px;
+  border-radius: var(--radius-card);
+  background: var(--sunken);
+}
+
+.chatApp {
+  align-self: flex-end;
+  width: 128px;
+  height: 24px;
+  border-radius: var(--radius-card);
+  background: var(--accent-100);
+}
+
+.taskCard {
+  width: 100%;
+  max-width: 240px;
+  padding: var(--sp-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  background: var(--surface);
+  border: 1px solid var(--line-600);
+  border-radius: var(--radius-card);
+}
+
+.taskRow {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--sp-2);
+  border-radius: var(--radius-control);
+}
+
+.taskNow {
+  background: var(--accent-100);
+  color: var(--accent-800);
+}
+
+.taskLocked {
+  background: var(--sunken);
+  color: var(--ink-500);
+}
+
+.taskDone {
+  background: var(--done-100);
+  color: var(--done-700);
+}
+
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.pipeChip {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--sp-1) var(--sp-2);
+  border-radius: 999px;
+}
+
+.pipeNow {
+  background: var(--accent-100);
+  color: var(--accent-800);
+}
+
+.pipeDone {
+  background: var(--done-100);
+  color: var(--done-700);
+}
+
+.pipeArrow {
+  display: inline-flex;
+  color: var(--ink-500);
+}

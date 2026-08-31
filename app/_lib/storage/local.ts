@@ -92,6 +92,18 @@ export function writeOnboarded(): void {
 }
 
 /* ------------------------------------------------------------------ */
+/* intro carousel (first launch)                                       */
+/* ------------------------------------------------------------------ */
+
+export function readIntroSeen(): boolean {
+  return storage()?.getItem(STORAGE_KEYS.intro) === "1";
+}
+
+export function writeIntroSeen(): void {
+  storage()?.setItem(STORAGE_KEYS.intro, "1");
+}
+
+/* ------------------------------------------------------------------ */
 /* read-aloud preference (voice corridor)                              */
 /* ------------------------------------------------------------------ */
 

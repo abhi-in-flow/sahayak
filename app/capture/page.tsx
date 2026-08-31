@@ -1,6 +1,7 @@
 import { DisclosureBanner, SkipLink } from "@/app/_components/Chrome";
 import { StateGate } from "@/app/_components/StateGate";
 import { DEFAULT_LOCALE, findLocale, t } from "@/app/_lib/i18n";
+import { guideStrings } from "@/app/_lib/i18n/guide";
 import { voiceRailStrings } from "@/app/_lib/voice/strings";
 import { TalkScreen, type TalkStrings } from "./_components/TalkScreen";
 import styles from "./page.module.css";
@@ -62,7 +63,7 @@ export default async function S2Page({
       <DisclosureBanner locale={locale} />
       <div className="shell">
         <main id="main" className={styles.main}>
-          <StateGate localeCode={locale.code}>
+          <StateGate localeCode={locale.code} guideStrings={guideStrings(locale)}>
             <TalkScreen
               localeCode={locale.code}
               endonym={locale.endonym}
